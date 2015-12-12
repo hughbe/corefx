@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 
 internal static partial class Interop
 {
@@ -18,6 +19,6 @@ internal static partial class Interop
         /// Note - on fail. the position of the stream may change depending on the platform; consult man 2 read for more info
         /// </returns>
         [DllImport(Libraries.SystemNative, SetLastError = true)]
-        internal static unsafe extern int Read(int fd, byte* buffer, int count);
+        internal static unsafe extern int Read(SafeFileHandle fd, byte* buffer, int count);
     }
 }

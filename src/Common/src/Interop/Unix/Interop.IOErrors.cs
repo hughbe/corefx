@@ -2,11 +2,34 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
 internal static partial class Interop
 {
+    private static bool CheckIo(ErrorInfo errorInfo, string path, bool isDirectory, Func<ErrorInfo, ErrorInfo> errorRewriter)
+    {
+        Debug.Assert(errorInfo.Error != Error.SUCCESS);
+
+        if (errorRewriter != null)
+        {
+            errorInfo = errorRewriter(errorInfo);
+        }
+
+        if (errorInfo.Error != Error.EINTR)
+        {
+            throw Interop.GetExceptionForIoErrno(errorInfo, path, isDirectory);
+        }
+
+        return true;
+    }
+
+    internal static bool CheckIo(Error error, string path = null, bool isDirectory = false, Func<ErrorInfo, ErrorInfo> errorRewriter = null)
+    {
+        return error != Interop.Error.SUCCESS && CheckIo(error.Info(), path, isDirectory, errorRewriter);
+    }
+
     /// <summary>
     /// Validates the result of system call that returns greater than or equal to 0 on success
     /// and less than 0 on failure, with errno set to the error code.
@@ -24,33 +47,19 @@ internal static partial class Interop
     /// </returns>
     internal static bool CheckIo(long result, string path = null, bool isDirectory = false, Func<ErrorInfo, ErrorInfo> errorRewriter = null)
     {
-        if (result < 0)
-        {
-            ErrorInfo errorInfo = Interop.Sys.GetLastErrorInfo();
-            if (errorRewriter != null)
-            {
-                errorInfo = errorRewriter(errorInfo);
-            }
-
-            if (errorInfo.Error != Error.EINTR)
-            {
-                throw Interop.GetExceptionForIoErrno(errorInfo, path, isDirectory);
-            }
-            return true;
-        }
-        return false;
+        return result < 0 && CheckIo(Sys.GetLastErrorInfo(), path, isDirectory, errorRewriter);
     }
 
     /// <summary>
-    /// Validates the result of system call that returns a non-zero pointer on success
-    /// and a zero pointer on failure.
+    /// Validates the result of system call that returns greater than or equal to 0 on success
+    /// and less than 0 on failure, with errno set to the error code.
     /// If the system call failed due to interruption (EINTR), true is returned and 
     /// the caller should (usually) retry. If the system call failed for any other reason, 
     /// an exception is thrown. Otherwise, the system call succeeded, and false is returned.
     /// </summary>
-    internal static bool CheckIoPtr(IntPtr ptr, string path = null, bool isDirectory = false)
+    internal static bool CheckIo(IntPtr ptr, string path = null, bool isDirectory = false, Func<ErrorInfo, ErrorInfo> errorRewriter = null)
     {
-        return CheckIo(ptr == IntPtr.Zero ? -1 : 0, path, isDirectory);
+        return CheckIo((long)ptr, path, isDirectory, errorRewriter);
     }
 
     /// <summary>

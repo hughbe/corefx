@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #include "pal_config.h"
+#include "pal_errno.h"
 #include "pal_io.h"
 #include "pal_utilities.h"
 
@@ -158,10 +159,10 @@ extern "C" int32_t Stat(const char* path, FileStatus* output)
     return ret;
 }
 
-extern "C" int32_t FStat(int32_t fd, FileStatus* output)
+extern "C" int32_t FStat(intptr_t fd, FileStatus* output)
 {
     struct stat_ result;
-    int ret = fstat_(fd, &result);
+    int ret = fstat_(ToFileDescriptor(fd), &result);
 
     if (ret == 0)
     {
@@ -224,7 +225,7 @@ static int32_t ConvertOpenFlags(int32_t flags)
     return ret;
 }
 
-extern "C" int32_t Open(const char* path, int32_t flags, int32_t mode)
+extern "C" intptr_t Open(const char* path, int32_t flags, int32_t mode)
 {
     flags = ConvertOpenFlags(flags);
     if (flags == -1)
@@ -236,14 +237,14 @@ extern "C" int32_t Open(const char* path, int32_t flags, int32_t mode)
     return open(path, flags, static_cast<mode_t>(mode));
 }
 
-extern "C" int32_t Close(int32_t fd)
+extern "C" int32_t Close(intptr_t fd)
 {
-    return close(fd);
+    return close(ToFileDescriptor(fd));
 }
 
-extern "C" int32_t Dup(int oldfd)
+extern "C" intptr_t Dup(intptr_t oldfd)
 {
-    return dup(oldfd);
+    return dup(ToFileDescriptor(oldfd));
 }
 
 extern "C" int32_t Unlink(const char* path)
@@ -251,7 +252,7 @@ extern "C" int32_t Unlink(const char* path)
     return unlink(path);
 }
 
-extern "C" int32_t ShmOpen(const char* name, int32_t flags, int32_t mode)
+extern "C" intptr_t ShmOpen(const char* name, int32_t flags, int32_t mode)
 {
 #if HAVE_SHM_OPEN_THAT_WORKS_WELL_ENOUGH_WITH_MMAP
     flags = ConvertOpenFlags(flags);
@@ -385,10 +386,10 @@ extern "C" int32_t FcntlCanGetSetPipeSz()
 #endif
 }
 
-extern "C" int32_t FcntlGetPipeSz(int32_t fd)
+extern "C" int32_t FcntlGetPipeSz(intptr_t fd)
 {
 #ifdef F_GETPIPE_SZ
-    return fcntl(fd, F_GETPIPE_SZ);
+    return fcntl(ToFileDescriptor(fd), F_GETPIPE_SZ);
 #else
     (void)fd;
     errno = ENOTSUP;
@@ -396,10 +397,10 @@ extern "C" int32_t FcntlGetPipeSz(int32_t fd)
 #endif
 }
 
-extern "C" int32_t FcntlSetPipeSz(int32_t fd, int32_t size)
+extern "C" int32_t FcntlSetPipeSz(intptr_t fd, int32_t size)
 {
 #ifdef F_SETPIPE_SZ
-    return fcntl(fd, F_SETPIPE_SZ, size);
+    return fcntl(ToFileDescriptor(fd), F_SETPIPE_SZ, size);
 #else
     (void)fd, (void)size;
     errno = ENOTSUP;
@@ -407,20 +408,11 @@ extern "C" int32_t FcntlSetPipeSz(int32_t fd, int32_t size)
 #endif
 }
 
-extern "C" int32_t FcntlGetIsNonBlocking(int32_t fd)
+extern "C" int32_t FcntlSetIsNonBlocking(intptr_t fd, int32_t isNonBlocking)
 {
-    int flags = fcntl(fd, F_GETFL);
-    if (flags == -1)
-    {
-        return -1;
-    }
+    int fileDescriptor = ToFileDescriptor(fd);
 
-    return (flags & O_NONBLOCK) == O_NONBLOCK ? 1 : 0;
-}
-
-extern "C" int32_t FcntlSetIsNonBlocking(int32_t fd, int32_t isNonBlocking)
-{
-    int flags = fcntl(fd, F_GETFL);
+    int flags = fcntl(fileDescriptor, F_GETFL);
     if (flags == -1)
     {
         return -1;
@@ -435,7 +427,7 @@ extern "C" int32_t FcntlSetIsNonBlocking(int32_t fd, int32_t isNonBlocking)
         flags |= O_NONBLOCK;
     }
 
-    return fcntl(fd, F_SETFL, flags);
+    return fcntl(fileDescriptor, F_SETFL, flags);
 }
 
 extern "C" int32_t MkDir(const char* path, int32_t mode)
@@ -453,14 +445,14 @@ extern "C" int32_t MkFifo(const char* path, int32_t mode)
     return mkfifo(path, static_cast<mode_t>(mode));
 }
 
-extern "C" int32_t FSync(int32_t fd)
+extern "C" int32_t FSync(intptr_t fd)
 {
-    return fsync(fd);
+    return fsync(ToFileDescriptor(fd));
 }
 
-extern "C" int32_t FLock(int32_t fd, LockOperations operation)
+extern "C" int32_t FLock(intptr_t fd, LockOperations operation)
 {
-    return flock(fd, operation);
+    return flock(ToFileDescriptor(fd), operation);
 }
 
 extern "C" int32_t ChDir(const char* path)
@@ -478,9 +470,9 @@ extern "C" int32_t FnMatch(const char* pattern, const char* path, FnMatchFlags f
     return fnmatch(pattern, path, flags);
 }
 
-extern "C" int64_t LSeek(int32_t fd, int64_t offset, SeekWhence whence)
+extern "C" int64_t LSeek(intptr_t fd, int64_t offset, SeekWhence whence)
 {
-    return lseek(fd, offset, whence);
+    return lseek(ToFileDescriptor(fd), offset, whence);
 }
 
 extern "C" int32_t Link(const char* source, const char* linkTarget)
@@ -488,7 +480,7 @@ extern "C" int32_t Link(const char* source, const char* linkTarget)
     return link(source, linkTarget);
 }
 
-extern "C" int32_t MksTemps(char* pathTemplate, int32_t suffixLength)
+extern "C" intptr_t MksTemps(char* pathTemplate, int32_t suffixLength)
 {
     return mkstemps(pathTemplate, suffixLength);
 }
@@ -560,7 +552,7 @@ extern "C" void* MMap(void* address,
                       uint64_t length,
                       int32_t protection, // bitwise OR of PAL_PROT_*
                       int32_t flags,      // bitwise OR of PAL_MAP_*, but PRIVATE and SHARED are mutually exclusive.
-                      int32_t fd,
+                      intptr_t fd,
                       int64_t offset)
 {
     if (length > SIZE_MAX)
@@ -578,7 +570,8 @@ extern "C" void* MMap(void* address,
         return nullptr;
     }
 
-    void* ret = mmap(address, static_cast<size_t>(length), protection, flags, fd, offset);
+    // Use ToFileDescriptorUnchecked to allow -1 to be passed for the file descriptor, since managed code explicitly uses -1
+    void* ret = mmap(address, static_cast<size_t>(length), protection, flags, ToFileDescriptorUnchecked(fd), offset);
     if (ret == MAP_FAILED)
     {
         return nullptr;
@@ -697,56 +690,68 @@ extern "C" int64_t SysConf(SysConfName name)
     return -1;
 }
 
-extern "C" int32_t FTruncate(int32_t fd, int64_t length)
+extern "C" int32_t FTruncate(intptr_t fd, int64_t length)
 {
-    return ftruncate(fd, length);
+    return ftruncate(ToFileDescriptor(fd), length);
 }
 
-void ConvertPollFDPalToPlatform(const PollFD& pal, pollfd& native)
+extern "C" Error Poll(PollEvent* pollEvents, uint32_t eventCount, int32_t milliseconds, uint32_t* triggered)
 {
-    native.fd = pal.FD;
-    native.events = pal.Events;
-    native.revents = pal.REvents;
-}
-
-static void ConvertPollFDPlatformToPal(const pollfd& native, PollFD& pal)
-{
-    pal.FD = native.fd;
-    pal.Events = native.events;
-    pal.REvents = native.revents;
-}
-
-extern "C" int32_t Poll(PollFD* pollData, uint32_t numberOfPollFds, int32_t timeout)
-{
-    assert(numberOfPollFds <= 2);
-
-    if (numberOfPollFds > 2)
-        return ERANGE;
-
-    // Convert our standardized pollfd to the native one
-    pollfd fds[2];
-    for (uint32_t i = 0; i < numberOfPollFds; i++)
+    if (pollEvents == nullptr || triggered == nullptr)
     {
-        ConvertPollFDPalToPlatform(pollData[i], fds[i]);
+        return PAL_EFAULT;
     }
 
-    // Call poll with the native pollfd and, if necessary, convert the results back to our standardized pollfd
-    int32_t result = poll(fds, numberOfPollFds, timeout);
-    if (result > 0) // We only have result data if the result is positive
+    if (milliseconds < -1)
     {
-        for (uint32_t i = 0; i < numberOfPollFds; i++)
+        return PAL_EINVAL;
+    }
+
+    size_t bufferSize = sizeof(pollfd) * static_cast<size_t>(eventCount);
+    bool useStackBuffer = bufferSize <= 2048;
+    pollfd* pollfds = reinterpret_cast<pollfd*>(useStackBuffer ? alloca(bufferSize) : malloc(bufferSize));
+
+    for (uint32_t i = 0; i < eventCount; i++)
+    {
+        const PollEvent& event = pollEvents[i];
+        pollfds[i] = { .fd = event.FileDescriptor, .events = event.Events, .revents = 0 };
+    }
+
+    int rv = poll(pollfds, static_cast<nfds_t>(eventCount), milliseconds);
+    if (rv < 0)
+    {
+        if (!useStackBuffer)
         {
-            ConvertPollFDPlatformToPal(fds[i], pollData[i]);
+            free(pollfds);
         }
+
+        *triggered = 0;
+        return ConvertErrorPlatformToPal(errno);
     }
 
-    return result;
+    for (uint32_t i = 0; i < eventCount; i++)
+    {
+        const pollfd& pfd = pollfds[i];
+        assert(pfd.fd == pollEvents[i].FileDescriptor);
+        assert(pfd.events == pollEvents[i].Events);
+
+        pollEvents[i].TriggeredEvents = static_cast<PollEvents>(pfd.revents);
+    }
+
+    *triggered = static_cast<uint32_t>(rv);
+
+    if (!useStackBuffer)
+    {
+        free(pollfds);
+    }
+
+    return PAL_SUCCESS;
 }
 
-extern "C" int32_t PosixFAdvise(int32_t fd, int64_t offset, int64_t length, FileAdvice advice)
+extern "C" int32_t PosixFAdvise(intptr_t fd, int64_t offset, int64_t length, FileAdvice advice)
 {
 #if HAVE_POSIX_ADVISE
-    return posix_fadvise(fd, offset, length, advice);
+    return posix_fadvise(ToFileDescriptor(fd), offset, length, advice);
 #else
     // Not supported on this platform. Caller can ignore this failure since it's just a hint.
     (void)fd, (void)offset, (void)length, (void)advice;
@@ -754,7 +759,7 @@ extern "C" int32_t PosixFAdvise(int32_t fd, int64_t offset, int64_t length, File
 #endif
 }
 
-extern "C" int32_t Read(int32_t fd, void* buffer, int32_t bufferSize)
+extern "C" int32_t Read(intptr_t fd, void* buffer, int32_t bufferSize)
 {
     assert(buffer != nullptr || bufferSize == 0);
     assert(bufferSize >= 0);
@@ -765,7 +770,7 @@ extern "C" int32_t Read(int32_t fd, void* buffer, int32_t bufferSize)
         return -1;
     }
 
-    ssize_t count = read(fd, buffer, UnsignedCast(bufferSize));
+    ssize_t count = read(ToFileDescriptor(fd), buffer, UnsignedCast(bufferSize));
     assert(count >= -1 && count <= bufferSize);
     return static_cast<int32_t>(count);
 }
@@ -801,7 +806,7 @@ extern "C" void Sync()
     sync();
 }
 
-extern "C" int32_t Write(int32_t fd, const void* buffer, int32_t bufferSize)
+extern "C" int32_t Write(intptr_t fd, const void* buffer, int32_t bufferSize)
 {
     assert(buffer != nullptr || bufferSize == 0);
     assert(bufferSize >= 0);
@@ -812,12 +817,12 @@ extern "C" int32_t Write(int32_t fd, const void* buffer, int32_t bufferSize)
         return -1;
     }
 
-    ssize_t count = write(fd, buffer, UnsignedCast(bufferSize));
+    ssize_t count = write(ToFileDescriptor(fd), buffer, UnsignedCast(bufferSize));
     assert(count >= -1 && count <= bufferSize);
     return static_cast<int32_t>(count);
 }
 
-extern "C" int32_t INotifyInit()
+extern "C" intptr_t INotifyInit()
 {
 #if HAVE_INOTIFY
     return inotify_init();
@@ -827,13 +832,13 @@ extern "C" int32_t INotifyInit()
 #endif
 }
 
-extern "C" int32_t INotifyAddWatch(int32_t fd, const char* pathName, uint32_t mask)
+extern "C" int32_t INotifyAddWatch(intptr_t fd, const char* pathName, uint32_t mask)
 {
     assert(fd >= 0);
     assert(pathName != nullptr);
 
 #if HAVE_INOTIFY
-    return inotify_add_watch(fd, pathName, mask);
+    return inotify_add_watch(ToFileDescriptor(fd), pathName, mask);
 #else
     (void)fd, (void)pathName, (void)mask;
     errno = ENOTSUP;
@@ -841,13 +846,13 @@ extern "C" int32_t INotifyAddWatch(int32_t fd, const char* pathName, uint32_t ma
 #endif
 }
 
-extern "C" int32_t INotifyRemoveWatch(int32_t fd, int32_t wd)
+extern "C" int32_t INotifyRemoveWatch(intptr_t fd, int32_t wd)
 {
     assert(fd >= 0);
     assert(wd >= 0);
 
 #if HAVE_INOTIFY
-    return inotify_rm_watch(fd, wd);
+    return inotify_rm_watch(ToFileDescriptor(fd), wd);
 #else
     (void)fd, (void)wd;
     errno = ENOTSUP;

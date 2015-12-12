@@ -3,6 +3,7 @@
 
 #include "pal_config.h"
 #include "pal_multi.h"
+#include "pal_utilities.h"
 
 #include <assert.h>
 
@@ -15,6 +16,10 @@ static_assert(PAL_CURLM_BAD_SOCKET == CURLM_BAD_SOCKET, "");
 static_assert(PAL_CURLM_UNKNOWN_OPTION == CURLM_UNKNOWN_OPTION, "");
 #if HAVE_CURLM_ADDED_ALREADY
 static_assert(PAL_CURLM_ADDED_ALREADY == CURLM_ADDED_ALREADY, "");
+#endif
+static_assert(PAL_CURLMOPT_PIPELINING == CURLMOPT_PIPELINING, "");
+#if HAVE_CURLPIPE_MULTIPLEX
+static_assert(PAL_CURLPIPE_MULTIPLEX == CURLPIPE_MULTIPLEX, "");
 #endif
 
 static_assert(PAL_CURLMSG_DONE == CURLMSG_DONE, "");
@@ -39,14 +44,14 @@ extern "C" int32_t MultiRemoveHandle(CURLM* multiHandle, CURL* easyHandle)
     return curl_multi_remove_handle(multiHandle, easyHandle);
 }
 
-extern "C" int32_t MultiWait(CURLM* multiHandle, int32_t extraFileDescriptor, int32_t* isExtraFileDescriptorActive, int32_t* isTimeout)
+extern "C" int32_t MultiWait(CURLM* multiHandle, intptr_t extraFileDescriptor, int32_t* isExtraFileDescriptorActive, int32_t* isTimeout)
 {
     assert(isExtraFileDescriptorActive != nullptr);
     assert(isTimeout != nullptr);
 
     curl_waitfd extraFds =
     {
-        .fd = extraFileDescriptor,
+        .fd = ToFileDescriptor(extraFileDescriptor),
         .events = CURL_WAIT_POLLIN,
         .revents = 0
     };
@@ -100,4 +105,9 @@ extern "C" int32_t MultiInfoRead(CURLM* multiHandle, int32_t* message, CURL** ea
 extern "C" const char* MultiGetErrorString(PAL_CURLMcode code)
 {
     return curl_multi_strerror(static_cast<CURLMcode>(code));
+}
+
+extern "C" int32_t MultiSetOptionLong(CURLM* handle, PAL_CURLMoption option, int64_t value)
+{
+    return curl_multi_setopt(handle, static_cast<CURLMoption>(option), value);
 }

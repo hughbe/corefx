@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 
 internal static partial class Interop
 {
@@ -23,7 +24,7 @@ internal static partial class Interop
         [DllImport(Libraries.HttpNative)]
         public static extern CURLMcode MultiWait(
             SafeCurlMultiHandle multiHandle,
-            int extraFileDescriptor,
+            SafeFileHandle extraFileDescriptor,
             out bool isExtraFileDescriptorActive,
             out bool isTimeout);
 
@@ -40,6 +41,9 @@ internal static partial class Interop
         [DllImport(Libraries.HttpNative)]
         public static extern IntPtr MultiGetErrorString(int code);
 
+        [DllImport(Libraries.HttpNative)]
+        public static extern CURLMcode MultiSetOptionLong(SafeCurlMultiHandle curl, CURLMoption option, long value);
+
         // Enum for constants defined for the enum CURLMcode in multi.h
         internal enum CURLMcode : int
         {
@@ -51,6 +55,16 @@ internal static partial class Interop
             CURLM_BAD_SOCKET = 5,
             CURLM_UNKNOWN_OPTION = 6,
             CURLM_ADDED_ALREADY = 7,
+        }
+
+        internal enum CURLMoption : int
+        {
+            CURLMOPT_PIPELINING = 3,
+        }
+
+        internal enum CurlPipe : int
+        {
+            CURLPIPE_MULTIPLEX = 2
         }
 
         // Enum for constants defined for the enum CURLMSG in multi.h

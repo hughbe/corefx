@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -60,8 +61,9 @@ namespace System.Net.NetworkInformation
             // If the result include there being no information, we'll still throw
             if (result != Interop.IpHlpApi.ERROR_SUCCESS)
             {
-                throw new NetworkInformationException((int)result);
+                throw new Win32Exception((int)result);
             }
+            
             return fixedInfo;
         }
 

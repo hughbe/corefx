@@ -298,6 +298,25 @@ check_cxx_source_compiles(
     "
     HAVE_CURLM_ADDED_ALREADY)
 
+check_cxx_source_compiles(
+    "
+    #include <curl/multi.h>
+    int main() { int i = CURL_HTTP_VERSION_2_0; }
+    "
+    HAVE_CURL_HTTP_VERSION_2_0)
+
+check_cxx_source_compiles(
+    "
+    #include <curl/multi.h>
+    int main() { int i = CURLPIPE_MULTIPLEX; }
+    "
+    HAVE_CURLPIPE_MULTIPLEX)
+
+check_symbol_exists(
+    OPEN_MAX
+    "sys/syslimits.h"
+    HAVE_OPEN_MAX)
+
 set (CMAKE_REQUIRED_LIBRARIES)
 
 configure_file(

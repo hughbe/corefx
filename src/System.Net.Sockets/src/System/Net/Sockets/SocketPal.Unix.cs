@@ -521,7 +521,7 @@ namespace System.Net.Sockets
                 Debug.Assert(fd != -1);
 
                 // If the accept completed successfully, ensure that the accepted socket is non-blocking.
-                int err = Interop.Sys.Fcntl.SetIsNonBlocking(fd, 1);
+                int err = Interop.Sys.Fcntl.SetIsNonBlocking((IntPtr)fd, 1);
                 if (err == 0)
                 {
                     socketAddressLen = sockAddrLen;
@@ -532,7 +532,7 @@ namespace System.Net.Sockets
                 {
                     errorCode = GetSocketErrorForErrorCode(Interop.Sys.GetLastError());
                     acceptedFd = -1;
-                    Interop.Sys.Close(fd);
+                    Interop.Sys.Close((IntPtr)fd);
                 }
 
                 return true;
@@ -1185,27 +1185,29 @@ namespace System.Net.Sockets
 
         public static unsafe SocketError Poll(SafeCloseSocket handle, int microseconds, SelectMode mode, out bool status)
         {
-            var fdSet = new Interop.Sys.FdSet();
-            fdSet.Set(handle.FileDescriptor);
+            uint* fdSet = stackalloc uint[Interop.Sys.FD_SETSIZE_UINTS];
+            Interop.Sys.FD_ZERO(fdSet);
+
+            Interop.Sys.FD_SET(handle.FileDescriptor, fdSet);
 
             int fdCount = 0;
-            Interop.Sys.FdSet* readFds = null;
-            Interop.Sys.FdSet* writeFds = null;
-            Interop.Sys.FdSet* errorFds = null;
+            uint* readFds = null;
+            uint* writeFds = null;
+            uint* errorFds = null;
             switch (mode)
             {
                 case SelectMode.SelectRead:
-                    readFds = &fdSet;
+                    readFds = fdSet;
                     fdCount = handle.FileDescriptor + 1;
                     break;
 
                 case SelectMode.SelectWrite:
-                    writeFds = &fdSet;
+                    writeFds = fdSet;
                     fdCount = handle.FileDescriptor + 1;
                     break;
 
                 case SelectMode.SelectError:
-                    errorFds = &fdSet;
+                    errorFds = fdSet;
                     fdCount = handle.FileDescriptor + 1;
                     break;
             }
@@ -1218,35 +1220,35 @@ namespace System.Net.Sockets
                 return GetSocketErrorForErrorCode(err);
             }
 
-            status = fdSet.IsSet(handle.FileDescriptor);
+            status = Interop.Sys.FD_ISSET(handle.FileDescriptor, fdSet);
             return SocketError.Success;
         }
 
         public static unsafe SocketError Select(IList checkRead, IList checkWrite, IList checkError, int microseconds)
         {
-            var readSet = new Interop.Sys.FdSet();
-            int maxReadFd = Socket.FillFdSetFromSocketList(ref readSet, checkRead);
+            uint* readSet = stackalloc uint[Interop.Sys.FD_SETSIZE_UINTS];
+            int maxReadFd = Socket.FillFdSetFromSocketList(readSet, checkRead);
 
-            var writeSet = new Interop.Sys.FdSet();
-            int maxWriteFd = Socket.FillFdSetFromSocketList(ref writeSet, checkWrite);
+            uint* writeSet = stackalloc uint[Interop.Sys.FD_SETSIZE_UINTS];
+            int maxWriteFd = Socket.FillFdSetFromSocketList(writeSet, checkWrite);
 
-            var errorSet = new Interop.Sys.FdSet();
-            int maxErrorFd = Socket.FillFdSetFromSocketList(ref errorSet, checkError);
+            uint* errorSet = stackalloc uint[Interop.Sys.FD_SETSIZE_UINTS];
+            int maxErrorFd = Socket.FillFdSetFromSocketList(errorSet, checkError);
 
             int fdCount = 0;
-            Interop.Sys.FdSet* readFds = null;
-            Interop.Sys.FdSet* writeFds = null;
-            Interop.Sys.FdSet* errorFds = null;
+            uint* readFds = null;
+            uint* writeFds = null;
+            uint* errorFds = null;
 
             if (maxReadFd != 0)
             {
-                readFds = &readSet;
+                readFds = readSet;
                 fdCount = maxReadFd;
             }
 
             if (maxWriteFd != 0)
             {
-                writeFds = &writeSet;
+                writeFds = writeSet;
                 if (maxWriteFd > fdCount)
                 {
                     fdCount = maxWriteFd;
@@ -1255,7 +1257,7 @@ namespace System.Net.Sockets
 
             if (maxErrorFd != 0)
             {
-                errorFds = &errorSet;
+                errorFds = errorSet;
                 if (maxErrorFd > fdCount)
                 {
                     fdCount = maxErrorFd;
@@ -1272,9 +1274,9 @@ namespace System.Net.Sockets
                 return GetSocketErrorForErrorCode(err);
             }
 
-            Socket.FilterSocketListUsingFdSet(ref readSet, checkRead);
-            Socket.FilterSocketListUsingFdSet(ref writeSet, checkWrite);
-            Socket.FilterSocketListUsingFdSet(ref errorSet, checkError);
+            Socket.FilterSocketListUsingFdSet(readSet, checkRead);
+            Socket.FilterSocketListUsingFdSet(writeSet, checkWrite);
+            Socket.FilterSocketListUsingFdSet(errorSet, checkError);
 
             return SocketError.Success;
         }

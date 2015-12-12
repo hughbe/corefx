@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#include "pal_config.h"
 #include "pal_easy.h"
 
 #include <assert.h>
@@ -14,6 +15,7 @@ static_assert(PAL_CURLOPT_FOLLOWLOCATION == CURLOPT_FOLLOWLOCATION, "");
 static_assert(PAL_CURLOPT_PROXYPORT == CURLOPT_PROXYPORT, "");
 static_assert(PAL_CURLOPT_POSTFIELDSIZE == CURLOPT_POSTFIELDSIZE, "");
 static_assert(PAL_CURLOPT_MAXREDIRS == CURLOPT_MAXREDIRS, "");
+static_assert(PAL_CURLOPT_HTTP_VERSION == CURLOPT_HTTP_VERSION, "");
 static_assert(PAL_CURLOPT_NOSIGNAL == CURLOPT_NOSIGNAL, "");
 static_assert(PAL_CURLOPT_PROXYTYPE == CURLOPT_PROXYTYPE, "");
 static_assert(PAL_CURLOPT_HTTPAUTH == CURLOPT_HTTPAUTH, "");
@@ -38,6 +40,13 @@ static_assert(PAL_CURLE_NOT_BUILT_IN == CURLE_NOT_BUILT_IN, "");
 static_assert(PAL_CURLE_COULDNT_RESOLVE_HOST == CURLE_COULDNT_RESOLVE_HOST, "");
 static_assert(PAL_CURLE_ABORTED_BY_CALLBACK == CURLE_ABORTED_BY_CALLBACK, "");
 static_assert(PAL_CURLE_UNKNOWN_OPTION == CURLE_UNKNOWN_OPTION, "");
+
+static_assert(PAL_CURL_HTTP_VERSION_NONE == CURL_HTTP_VERSION_NONE, "");
+static_assert(PAL_CURL_HTTP_VERSION_1_0 == CURL_HTTP_VERSION_1_0, "");
+static_assert(PAL_CURL_HTTP_VERSION_1_1 == CURL_HTTP_VERSION_1_1, "");
+#if HAVE_CURL_HTTP_VERSION_2_0
+static_assert(PAL_CURL_HTTP_VERSION_2_0 == CURL_HTTP_VERSION_2_0, "");
+#endif
 
 static_assert(PAL_CURLINFO_PRIVATE == CURLINFO_PRIVATE, "");
 static_assert(PAL_CURLINFO_HTTPAUTH_AVAIL == CURLINFO_HTTPAUTH_AVAIL, "");
@@ -169,19 +178,19 @@ extern "C" void RegisterSeekCallback(CURL* curl, SeekCallback callback, void* us
 static size_t write_callback(char* buffer, size_t size, size_t nitems, void* instream)
 {
     CallbackHandle* handle = static_cast<CallbackHandle*>(instream);
-    return handle->writeCallback(reinterpret_cast<uint8_t*>(buffer), size, nitems, handle->writeUserPointer);
+    return static_cast<size_t>(handle->writeCallback(reinterpret_cast<uint8_t*>(buffer), size, nitems, handle->writeUserPointer));
 }
 
 static size_t read_callback(char* buffer, size_t size, size_t nitems, void* instream)
 {
     CallbackHandle* handle = static_cast<CallbackHandle*>(instream);
-    return handle->readCallback(reinterpret_cast<uint8_t*>(buffer), size, nitems, handle->readUserPointer);
+    return static_cast<size_t>(handle->readCallback(reinterpret_cast<uint8_t*>(buffer), size, nitems, handle->readUserPointer));
 }
 
 static size_t header_callback(char* buffer, size_t size, size_t nitems, void* instream)
 {
     CallbackHandle* handle = static_cast<CallbackHandle*>(instream);
-    return handle->headerCallback(reinterpret_cast<uint8_t*>(buffer), size, nitems, handle->headerUserPointer);
+    return static_cast<size_t>(handle->headerCallback(reinterpret_cast<uint8_t*>(buffer), size, nitems, handle->headerUserPointer));
 }
 
 extern "C" void RegisterReadWriteCallback(CURL* curl, ReadWriteFunction functionType, ReadWriteCallback callback, void* userPointer, CallbackHandle** callbackHandle)

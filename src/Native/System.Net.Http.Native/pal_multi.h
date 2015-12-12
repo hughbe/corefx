@@ -19,6 +19,16 @@ enum PAL_CURLMcode : int32_t
     PAL_CURLM_ADDED_ALREADY = 7, // Added in libcurl 7.32.1
 };
 
+enum PAL_CURLMoption : int32_t
+{
+    PAL_CURLMOPT_PIPELINING = 3,
+};
+
+enum PAL_CurlPipe : int32_t
+{
+    PAL_CURLPIPE_MULTIPLEX = 2,
+};
+
 enum PAL_CURLMSG : int32_t
 {
     PAL_CURLMSG_DONE = 1,
@@ -60,7 +70,7 @@ Returns CURLM_OK on success, otherwise an error code.
 isExtraFileDescriptorActive is set to a value indicating whether extraFileDescriptor has new data received.
 isTimeout is set to a value indicating whether a timeout was encountered before any file descriptors had events occur.
 */
-extern "C" int32_t MultiWait(CURLM* multiHandle, int32_t extraFileDescriptor, int32_t* isExtraFileDescriptorActive, int32_t* isTimeout);
+extern "C" int32_t MultiWait(CURLM* multiHandle, intptr_t extraFileDescriptor, int32_t* isExtraFileDescriptorActive, int32_t* isTimeout);
 
 /*
 Reads/writes available data from each easy handle.
@@ -83,3 +93,8 @@ extern "C" int32_t MultiInfoRead(CURLM* multiHandle, int32_t* message, CURL** ea
 Returns a string describing the CURLMcode error code.
 */
 extern "C" const char* MultiGetErrorString(PAL_CURLMcode code);
+
+/*
+Shims the curl_multi_setopt function
+*/
+extern "C" int32_t MultiSetOptionLong(CURLM* handle, PAL_CURLMoption option, int64_t value);
