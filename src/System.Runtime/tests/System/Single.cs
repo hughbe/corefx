@@ -1,322 +1,368 @@
-// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.Tests.Common;
 
 using Xunit;
 
-public static class SingleTests
+namespace System.Runtime.Tests
 {
-    [Fact]
-    public static void TestCtorEmpty()
+    public static class SingleTests
     {
-        float i = new float();
-        Assert.Equal(0, i);
-    }
+        [Fact]
+        public static void TestCtor_Empty()
+        {
+            float i = new float();
+            Assert.Equal(0, i);
+        }
 
-    [Fact]
-    public static void TestCtorValue()
-    {
-        float i = 41;
-        Assert.Equal(41, i);
-    }
+        [Fact]
+        public static void TestCtor_Value()
+        {
+            float i = 41;
+            Assert.Equal(41, i);
+        }
 
-    [Fact]
-    public static void TestMaxValue()
-    {
-        Assert.Equal((float)3.40282346638528859e+38, float.MaxValue);
-    }
+        [Fact]
+        public static void TestMaxValue()
+        {
+            Assert.Equal((float)3.40282346638528859e+38, float.MaxValue);
+        }
 
-    [Fact]
-    public static void TestMinValue()
-    {
-        Assert.Equal((float)(-3.40282346638528859e+38), float.MinValue);
-    }
+        [Fact]
+        public static void TestMinValue()
+        {
+            Assert.Equal((float)(-3.40282346638528859e+38), float.MinValue);
+        }
 
-    [Fact]
-    public static void TestEpsilon()
-    {
-        Assert.Equal((float)1.4e-45, float.Epsilon);
-    }
+        [Fact]
+        public static void TestEpsilon()
+        {
+            Assert.Equal((float)1.4e-45, float.Epsilon);
+        }
+       
+        [Theory]
+        [InlineData(float.PositiveInfinity, true)]
+        [InlineData(float.NegativeInfinity, true)]
+        [InlineData(0.0, false)]
+        public static void TestIsInfinity(float f, bool expected)
+        {
+            Assert.Equal(expected, float.IsInfinity(f));
+        }
 
-    [Fact]
-    public static void TestIsInfinity()
-    {
-        Assert.True(float.IsInfinity(float.NegativeInfinity));
-        Assert.True(float.IsInfinity(float.PositiveInfinity));
-    }
+        [Fact]
+        public static void TestNaN()
+        {
+            Assert.Equal((float)0.0 / (float)0.0, float.NaN);
+        }
 
-    [Fact]
-    public static void TestNaN()
-    {
-        Assert.Equal((float)0.0 / (float)0.0, float.NaN);
-    }
+        [Theory]
+        [InlineData(float.NaN, true)]
+        [InlineData(0.0, false)]
+        public static void TestIsNaN(float f, bool expected)
+        {
+            Assert.Equal(expected, float.IsNaN(f));
+        }
 
-    [Fact]
-    public static void TestIsNaN()
-    {
-        Assert.True(float.IsNaN(float.NaN));
-    }
+        [Theory]
+        [InlineData(float.PositiveInfinity, true)]
+        [InlineData(float.NegativeInfinity, false)]
+        [InlineData(0.0, false)]
+        public static void TestIsPositiveInfinity(float f, bool expected)
+        {
+            Assert.Equal(expected, float.IsPositiveInfinity(f));
+        }
 
-    [Fact]
-    public static void TestNegativeInfinity()
-    {
-        Assert.Equal((float)(-1.0) / (float)0.0, float.NegativeInfinity);
-    }
+        [Fact]
+        public static void TestPositiveInfinity()
+        {
+            Assert.Equal((float)1.0 / (float)0.0, float.PositiveInfinity);
+        }
 
-    [Fact]
-    public static void TestIsNegativeInfinity()
-    {
-        Assert.True(float.IsNegativeInfinity(float.NegativeInfinity));
-    }
+        [Fact]
+        public static void TestNegativeInfinity()
+        {
+            Assert.Equal((float)-1.0 / (float)0.0, float.NegativeInfinity);
+        }
 
-    [Fact]
-    public static void TestPositiveInfinity()
-    {
-        Assert.Equal((float)1.0 / (float)0.0, float.PositiveInfinity);
-    }
+        [Theory]
+        [InlineData(float.NegativeInfinity, true)]
+        [InlineData(float.PositiveInfinity, false)]
+        [InlineData(0.0, false)]
+        public static void TestIsNegativeInfinity(float f, bool expected)
+        {
+            Assert.Equal(expected, float.IsNegativeInfinity(f));
+        }
 
-    [Fact]
-    public static void TestIsPositiveInfinity()
-    {
-        Assert.True(float.IsPositiveInfinity(float.PositiveInfinity));
-    }
+        [Theory]
+        [InlineData((float)234, (float)234, 0)]
+        [InlineData((float)234, float.MinValue, 1)]
+        [InlineData((float)234, (float)-123, 1)]
+        [InlineData((float)234, (float)0, 1)]
+        [InlineData((float)234, (float)123, 1)]
+        [InlineData((float)234, (float)456, -1)]
+        [InlineData((float)234, float.MaxValue, -1)]
+        [InlineData((float)234, float.NaN, 1)]
+        [InlineData(float.NaN, float.NaN, 0)]
+        [InlineData(float.NaN, (float)0, -1)]
+        [InlineData((float)234, null, 1)]
+        public static void TestCompareTo(float f, object value, int expected)
+        {
+            if (value is float)
+            {
+                Assert.Equal(expected, CompareHelper.NormalizeCompare(f.CompareTo((float)value)));
+            }
+            IComparable iComparable = f;
+            Assert.Equal(expected, CompareHelper.NormalizeCompare(iComparable.CompareTo(value)));
+        }
 
-    [Theory]
-    [InlineData((float)234, (float)234, 0)]
-    [InlineData((float)234, float.MinValue, 1)]
-    [InlineData((float)234, (float)(-123), 1)]
-    [InlineData((float)234, (float)0, 1)]
-    [InlineData((float)234, (float)123, 1)]
-    [InlineData((float)234, (float)456, -1)]
-    [InlineData((float)234, float.MaxValue, -1)]
-    [InlineData((float)234, float.NaN, 1)]
-    [InlineData(float.NaN, float.NaN, 0)]
-    [InlineData(float.NaN, 0, -1)]
-    public static void TestCompareTo(float i, float value, int expected)
-    {
-        int result = CompareHelper.NormalizeCompare(i.CompareTo(value));
-        Assert.Equal(expected, result);
-    }
+        [Fact]
+        public static void TestCompareTo_Invalid()
+        {
+            IComparable comparable = (float)234;
+            Assert.Throws<ArgumentException>(null, () => comparable.CompareTo("a")); // Obj is not a float
+        }
+        
+        [Theory]
+        [InlineData((float)789, true)]
+        [InlineData((float)(-789), false)]
+        [InlineData((float)0, false)]
+        public static void TestEqualsObject(object obj, bool expected)
+        {
+            float i = 789;
+            Assert.Equal(expected, i.Equals(obj));
+        }
 
-    [Theory]
-    [InlineData(null, 1)]
-    [InlineData((float)234, 0)]
-    [InlineData(float.MinValue, 1)]
-    [InlineData((float)(-123), 1)]
-    [InlineData((float)0, 1)]
-    [InlineData((float)123, 1)]
-    [InlineData((float)456, -1)]
-    [InlineData(float.MaxValue, -1)]
-    public static void TestCompareToObject(object obj, int expected)
-    {
-        IComparable comparable = (float)234;
-        int i = CompareHelper.NormalizeCompare(comparable.CompareTo(obj));
-        Assert.Equal(expected, i);
-    }
+        [Theory]
+        [InlineData((float)789, (float)789, true)]
+        [InlineData((float)789, (float)-789, false)]
+        [InlineData((float)789, (float)0, false)]
+        [InlineData(float.NaN, float.NaN, true)]
+        public static void TestEquals(float d1, object value, bool expected)
+        {
+            if (value is float)
+            {
+                float d2 = (float)value;
+                Assert.Equal(expected, d1.Equals(d2));
+                Assert.NotEqual(0, d1.GetHashCode());
+                Assert.Equal(expected, d1.GetHashCode().Equals(d2.GetHashCode()));
+            }
+            Assert.Equal(expected, d1.Equals(value));
+        }
+        [Theory]
+        [InlineData((float)6310, "6310")]
+        [InlineData((float)-6310, "-6310")]
+        [InlineData(float.NaN, "NaN")]
+        [InlineData(float.PositiveInfinity, "∞")]
+        [InlineData(float.NegativeInfinity, "-∞")]
+        [InlineData(float.Epsilon, "1.401298E-45")]
+        public static void TestToString(float d, string expected)
+        {
+            Assert.Equal(expected, d.ToString());
+        }
 
-    [Fact]
-    public static void TestCompareToObjectInvalid()
-    {
-        IComparable comparable = (float)234;
-        Assert.Throws<ArgumentException>(null, () => comparable.CompareTo("a")); //Obj is not a float
-    }
-    
-    [Theory]
-    [InlineData((float)789, true)]
-    [InlineData((float)(-789), false)]
-    [InlineData((float)0, false)]
-    public static void TestEqualsObject(object obj, bool expected)
-    {
-        float i = 789;
-        Assert.Equal(expected, i.Equals(obj));
-    }
+        public static IEnumerable<object[]> ToString_FormatProvider_TestData()
+        {
+            NumberFormatInfo nullFormat = null;
+            yield return new object[] { (float)6310, nullFormat, "6310" };
+            yield return new object[] { (float)-6310, nullFormat, "-6310" };
 
-    [Theory]
-    [InlineData((float)789, (float)789, true)]
-    [InlineData((float)789, (float)(-789), false)]
-    [InlineData((float)789, (float)0, false)]
-    [InlineData(float.NaN, float.NaN, true)]
-    public static void TestEquals(float i1, float i2, bool expected)
-    {
-        Assert.Equal(expected, i1.Equals(i2));
-    }
+            var defaultFormat = new NumberFormatInfo();
+            yield return new object[] { (float)6310, defaultFormat, "6310" };
+            yield return new object[] { (float)-6310, defaultFormat, "-6310" };
 
-    [Fact]
-    public static void TestGetHashCode()
-    {
-        float i1 = 123;
-        float i2 = 654;
+            // Changing the negative pattern doesn't do anything without also passing in a format string
+            var customFormat = new NumberFormatInfo();
+            customFormat.NumberNegativePattern = 0;
+            yield return new object[] { (float)-6310, customFormat, "-6310" };
 
-        Assert.NotEqual(0, i1.GetHashCode());
-        Assert.NotEqual(i1.GetHashCode(), i2.GetHashCode());
-    }
+            var invariantFormat = NumberFormatInfo.InvariantInfo;
+            yield return new object[] { float.NaN, invariantFormat, "NaN" };
+            yield return new object[] { float.PositiveInfinity, invariantFormat, "Infinity" };
+            yield return new object[] { float.NegativeInfinity, invariantFormat, "-Infinity" };
+        }
 
-    [Fact]
-    public static void TestToString()
-    {
-        float i1 = 6310;
-        Assert.Equal("6310", i1.ToString());
+        [Theory, MemberData("ToString_FormatProvider_TestData")]
+        public static void TestToString_FormatProvider(float d, IFormatProvider provider, string expected)
+        {
+            Assert.Equal(expected, d.ToString(provider));
+        }
 
-        float i2 = -8249;
-        Assert.Equal("-8249", i2.ToString());
-    }
+        public static IEnumerable<object[]> ToString_Format_TestData()
+        {
+            yield return new object[] { (float)6310, "G", "6310" };
+            yield return new object[] { (float)-6310, "G", "-6310" };
+            yield return new object[] { (float)-2468, "N", string.Format("{0:N}", -2468.00) };
+        }
 
-    [Fact]
-    public static void TestToStringFormatProvider()
-    {
-        var numberFormat = new NumberFormatInfo();
+        [Theory, MemberData("ToString_Format_TestData")]
+        public static void TestToString_Format(float d, string format, string expected)
+        {
+            Assert.Equal(expected, d.ToString(format.ToUpperInvariant()));
+            Assert.Equal(expected, d.ToString(format.ToLowerInvariant()));
+        }
 
-        float i1 = 6310;
-        Assert.Equal("6310", i1.ToString(numberFormat));
+        [Fact]
+        public static void TestToString_Format_Invalid()
 
-        float i2 = -8249;
-        Assert.Equal("-8249", i2.ToString(numberFormat));
+        {
+            float d = 0.0F;
+            Assert.Throws<FormatException>(() => d.ToString("Y"));
+        }
 
-        float i3 = -2468;
+        public static IEnumerable<object[]> ToString_Format_FormatProvider_TestData()
+        {
+            NumberFormatInfo nullFormat = null;
+            yield return new object[] { (float)6310, "G", nullFormat, "6310" };
+            yield return new object[] { (float)-6310, "G", nullFormat, "-6310" };
 
-        // Changing the negative pattern doesn't do anything without also passing in a format string
-        numberFormat.NumberNegativePattern = 0;
-        Assert.Equal("-2468", i3.ToString(numberFormat));
+            var emptyFormat = new NumberFormatInfo();
+            yield return new object[] { (float)6310, "G", emptyFormat, "6310" };
+            yield return new object[] { (float)-6310, "G", emptyFormat, "-6310" };
 
-        Assert.Equal("NaN", float.NaN.ToString(NumberFormatInfo.InvariantInfo));
-        Assert.Equal("Infinity", float.PositiveInfinity.ToString(NumberFormatInfo.InvariantInfo));
-        Assert.Equal("-Infinity", float.NegativeInfinity.ToString(NumberFormatInfo.InvariantInfo));
-    }
+            var customFormat = new NumberFormatInfo();
+            customFormat.NegativeSign = "xx"; // Set to trash to make sure it doesn't show up
+            customFormat.NumberGroupSeparator = "*";
+            customFormat.NumberNegativePattern = 0;
+            yield return new object[] { (float)-2468, "N", customFormat, "(2*468.00)" };
+        }
 
-    [Fact]
-    public static void TestToStringFormat()
-    {
-        float i1 = 6310;
-        Assert.Equal("6310", i1.ToString("G"));
+        [Theory, MemberData("ToString_Format_FormatProvider_TestData")]
+        public static void TestToStringFormatFormatProvider(float d, string format, IFormatProvider provider, string expected)
+        {
+            Assert.Equal(expected, d.ToString(format.ToUpperInvariant(), provider));
+            Assert.Equal(expected, d.ToString(format.ToLowerInvariant(), provider));
+        }
 
-        float i2 = -8249;
-        Assert.Equal("-8249", i2.ToString("g"));
+        public static IEnumerable<object[]> Parse_Valid_TestData()
+        {
+            // Defaults: AllowLeadingWhite | AllowTrailingWhite | AllowLeadingSign | AllowDecimalPoint | AllowExponent | AllowThousands
+            NumberFormatInfo nullFormat = null;
+            NumberStyles defaultStyle = NumberStyles.Float;
 
-        float i3 = -2468;
-        Assert.Equal(string.Format("{0:N}", -2468.00), i3.ToString("N"));
-    }
+            var emptyFormat = new NumberFormatInfo();
 
-    [Fact]
-    public static void TestToStringFormatFormatProvider()
-    {
-        var numberFormat = new NumberFormatInfo();
+            var customFormat1 = new NumberFormatInfo();
+            customFormat1.CurrencySymbol = "$";
+            customFormat1.CurrencyGroupSeparator = ",";
 
-        float i1 = 6310;
-        Assert.Equal("6310", i1.ToString("G", numberFormat));
+            var customFormat2 = new NumberFormatInfo();
+            customFormat2.NumberDecimalSeparator = ".";
 
-        float i2 = -8249;
-        Assert.Equal("-8249", i2.ToString("g", numberFormat));
+            NumberFormatInfo invariantFormat = NumberFormatInfo.InvariantInfo;
 
-        numberFormat.NegativeSign = "xx"; // setting it to trash to make sure it doesn't show up
-        numberFormat.NumberGroupSeparator = "*";
-        numberFormat.NumberNegativePattern = 0;
-        float i3 = -2468;
-        Assert.Equal("(2*468.00)", i3.ToString("N", numberFormat));
-    }
+            yield return new object[] { "-123", defaultStyle, nullFormat, (float)-123 };
+            yield return new object[] { "0", defaultStyle, nullFormat, (float)0 };
+            yield return new object[] { "123", defaultStyle, nullFormat, (float)123 };
+            yield return new object[] { "  123  ", defaultStyle, nullFormat, (float)123 };
+            yield return new object[] { "567.89", defaultStyle, nullFormat, (float)567.89 };
+            yield return new object[] { "-567.89", defaultStyle, nullFormat, (float)-567.89 };
+            yield return new object[] { "1E23", defaultStyle, nullFormat, (float)1E23 };
 
-    [Fact]
-    public static void TestParse()
-    {
-        Assert.Equal(123, float.Parse("123"));
-        Assert.Equal(-123, float.Parse("-123"));
-        //TODO: Negative tests once we get better exceptions
-    }
+            yield return new object[] { "123.1", NumberStyles.AllowDecimalPoint, nullFormat, (float)123.1 };
+            yield return new object[] { 1000.ToString("N0"), NumberStyles.AllowThousands, nullFormat, (float)1000 };
 
-    [Fact]
-    public static void TestParseNumberStyle()
-    {
-        Assert.Equal(123.1f, float.Parse((123.1).ToString("F"), NumberStyles.AllowDecimalPoint));
-        Assert.Equal(1000, float.Parse((1000).ToString("N0"), NumberStyles.AllowThousands));
-        //TODO: Negative tests once we get better exceptions
-    }
+            yield return new object[] { "123", NumberStyles.Any, emptyFormat, (float)123 };
+            yield return new object[] { "123.567", NumberStyles.Any, emptyFormat, 123.567 };
+            yield return new object[] { "123", NumberStyles.Float, emptyFormat, (float)123 };
+            yield return new object[] { "$1000", NumberStyles.Currency, customFormat1, (float)1000 };
+            yield return new object[] { "123.123", NumberStyles.Float, customFormat2, (float)123.123 };
+            yield return new object[] { "(123)", NumberStyles.AllowParentheses, customFormat2, (float)-123 };
 
-    [Fact]
-    public static void TestParseFormatProvider()
-    {
-        var nfi = new NumberFormatInfo();
-        Assert.Equal(123, float.Parse("123", nfi));
-        Assert.Equal(-123, float.Parse("-123", nfi));
-        //TODO: Negative tests once we get better exceptions
-    }
+            yield return new object[] { "NaN", NumberStyles.Any, invariantFormat, float.NaN };
+            yield return new object[] { "Infinity", NumberStyles.Any, invariantFormat, float.PositiveInfinity };
+            yield return new object[] { "-Infinity", NumberStyles.Any, invariantFormat, float.NegativeInfinity };
+        }
 
-    [Fact]
-    public static void TestParseNumberStyleFormatProvider()
-    {
-        var nfi = new NumberFormatInfo();
-        nfi.NumberDecimalSeparator = ".";
-        Assert.Equal(123.123f, float.Parse("123.123", NumberStyles.Float, nfi));
+        [Theory, MemberData("Parse_Valid_TestData")]
+        public static void TestParse(string value, NumberStyles style, IFormatProvider provider, float expected)
+        {
+            float f;
+            // If no style is specified, use the (String) or (String, IFormatProvider) overload
+            if (style == NumberStyles.Float)
+            {
+                Assert.True(float.TryParse(value, out f));
+                Assert.Equal(expected, f);
 
-        nfi.CurrencySymbol = "$";
-        nfi.CurrencyGroupSeparator = ",";
-        Assert.Equal(1000, float.Parse("$1,000", NumberStyles.Currency, nfi));
-        //TODO: Negative tests once we get better exception support
-    }
+                Assert.Equal(expected, float.Parse(value));
 
-    [Fact]
-    public static void TestTryParse()
-    {
-        // Defaults AllowLeadingWhite | AllowTrailingWhite | AllowLeadingSign | AllowDecimalPoint | AllowExponent | AllowThousands
+                // If a format provider is specified, but the style is the default, use the (String, IFormatProvider) overload
+                if (provider != null)
+                {
+                    Assert.Equal(expected, float.Parse(value, provider));
+                }
+            }
 
-        float i;
-        Assert.True(float.TryParse("123", out i));     // Simple
-        Assert.Equal(123, i);
+            // If a format provider isn't specified, test the default one, using a new instance of NumberFormatInfo
+            Assert.True(float.TryParse(value, style, provider ?? new NumberFormatInfo(), out f));
+            Assert.Equal(expected, f);
 
-        Assert.True(float.TryParse("-385", out i));    // LeadingSign
-        Assert.Equal(-385, i);
+            // If a format provider isn't specified, test the default one, using the (String, NumberStyles) overload
+            if (provider == null)
+            {
+                Assert.Equal(expected, float.Parse(value, style));
+            }
+            Assert.Equal(expected, float.Parse(value, style, provider ?? new NumberFormatInfo()));
+        }
 
-        Assert.True(float.TryParse(" 678 ", out i));   // Leading/Trailing whitespace
-        Assert.Equal(678, i);
+        public static IEnumerable<object[]> Parse_Invalid_TestData()
+        {
+            NumberFormatInfo nullFormat = null;
+            NumberStyles defaultStyle = NumberStyles.Float;
 
-        Assert.True(float.TryParse((678.90).ToString("F2"), out i)); // Decimal
-        Assert.Equal((float)678.90, i);
+            var customFormat = new NumberFormatInfo();
+            customFormat.CurrencySymbol = "$";
+            customFormat.NumberDecimalSeparator = ".";
 
-        Assert.True(float.TryParse("1E23", out i));   // Exponent
-        Assert.Equal((float)1E23, i);
+            yield return new object[] { null, defaultStyle, nullFormat, typeof(ArgumentNullException) };
+            yield return new object[] { "", defaultStyle, nullFormat, typeof(FormatException) };
+            yield return new object[] { " ", defaultStyle, nullFormat, typeof(FormatException) };
+            yield return new object[] { "Garbage", defaultStyle, nullFormat, typeof(FormatException) };
 
-        Assert.True(float.TryParse((1000).ToString("N0"), out i));  // Thousands
-        Assert.Equal(1000, i);
+            yield return new object[] { "ab", defaultStyle, nullFormat, typeof(FormatException) }; // Hex value
+            yield return new object[] { "(123)", defaultStyle, nullFormat, typeof(FormatException) }; // Parentheses
+            yield return new object[] { 100.ToString("C0"), defaultStyle, nullFormat, typeof(FormatException) }; // Currency
 
-        var nfi = new NumberFormatInfo() { CurrencyGroupSeparator = "" };
-        Assert.False(float.TryParse((1000).ToString("C0", nfi), out i));  // Currency
-        Assert.False(float.TryParse("abc", out i));    // Hex digits
-        Assert.False(float.TryParse("(135)", out i));  // Parentheses
-    }
+            yield return new object[] { "123.456", NumberStyles.Integer, nullFormat, typeof(FormatException) }; // Decimal
+            yield return new object[] { "  123.456", NumberStyles.None, nullFormat, typeof(FormatException) }; // Leading space
+            yield return new object[] { "123.456   ", NumberStyles.None, nullFormat, typeof(FormatException) }; // Leading space
+            yield return new object[] { "1E23", NumberStyles.None, nullFormat, typeof(FormatException) }; // Exponent
 
-    [Fact]
-    public static void TestTryParseNumberStyleFormatProvider()
-    {
-        float i;
-        var nfi = new NumberFormatInfo();
-        nfi.NumberDecimalSeparator = ".";
-        Assert.True(float.TryParse("123.123", NumberStyles.Any, nfi, out i));   // Simple positive
-        Assert.Equal(123.123f, i);
+            yield return new object[] { "ab", NumberStyles.None, nullFormat, typeof(FormatException) }; // Negative hex value
+            yield return new object[] { "  123  ", NumberStyles.None, nullFormat, typeof(FormatException) }; // Trailing and leading whitespace
+        }
 
-        Assert.True(float.TryParse("123", NumberStyles.Float, nfi, out i));   // Simple Hex
-        Assert.Equal(123, i);
+        [Theory, MemberData("Parse_Invalid_TestData")]
+        public static void TestParse_Invalid(string value, NumberStyles style, IFormatProvider provider, Type exceptionType)
+        {
+            float d;
+            // If no style is specified, use the (String) or (String, IFormatProvider) overload
+            if (style == NumberStyles.Float)
+            {
+                Assert.False(float.TryParse(value, out d));
+                Assert.Equal(default(float), d);
 
-        nfi.CurrencySymbol = "$";
-        nfi.CurrencyGroupSeparator = ",";
-        Assert.True(float.TryParse("$1,000", NumberStyles.Currency, nfi, out i)); // Currency/Thousands postive
-        Assert.Equal(1000, i);
+                Assert.Throws(exceptionType, () => float.Parse(value));
 
-        Assert.False(float.TryParse("abc", NumberStyles.None, nfi, out i));       // Hex Number negative
+                // If a format provider is specified, but the style is the default, use the (String, IFormatProvider) overload
+                if (provider != null)
+                {
+                    Assert.Throws(exceptionType, () => float.Parse(value, provider));
+                }
+            }
 
-        Assert.False(float.TryParse("678.90", NumberStyles.Integer, nfi, out i));  // Decimal
-        Assert.False(float.TryParse(" 678 ", NumberStyles.None, nfi, out i));      // Trailing/Leading whitespace negative
+            // If a format provider isn't specified, test the default one, using a new instance of NumberFormatInfo
+            Assert.False(float.TryParse(value, style, provider ?? new NumberFormatInfo(), out d));
+            Assert.Equal(default(float), d);
 
-        Assert.True(float.TryParse("(135)", NumberStyles.AllowParentheses, nfi, out i)); // Parenthese postive
-        Assert.Equal(-135, i);
-
-        Assert.True(float.TryParse("Infinity", NumberStyles.Any, NumberFormatInfo.InvariantInfo, out i));
-        Assert.True(float.IsPositiveInfinity(i));
-
-        Assert.True(float.TryParse("-Infinity", NumberStyles.Any, NumberFormatInfo.InvariantInfo, out i));
-        Assert.True(float.IsNegativeInfinity(i));
-
-        Assert.True(float.TryParse("NaN", NumberStyles.Any, NumberFormatInfo.InvariantInfo, out i));
-        Assert.True(float.IsNaN(i));
+            // If a format provider isn't specified, test the default one, using the (String, NumberStyles) overload
+            if (provider == null)
+            {
+                Assert.Throws(exceptionType, () => float.Parse(value, style));
+            }
+            Assert.Throws(exceptionType, () => float.Parse(value, style, provider ?? new NumberFormatInfo()));
+        }
     }
 }
