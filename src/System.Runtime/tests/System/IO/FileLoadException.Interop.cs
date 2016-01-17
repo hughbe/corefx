@@ -1,17 +1,18 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.IO;
 using System.Runtime.InteropServices;
 
 using Xunit;
 
-public partial class FileLoadException_Interop_40100_Tests
+namespace System.IO.Tests
 {
-    [Fact]
-    public static void FileLoadException_from_HR()
+    public static class FileLoadExceptionInteropTests
     {
-        int[] hrs =
+        [Fact]
+        public static void TestFom_HR()
+        {
+            var hrs = new int[]
             {
                 HResults.COR_E_FILELOAD,
                 HResults.FUSION_E_INVALID_PRIVATE_ASM_LOCATION,
@@ -41,15 +42,16 @@ public partial class FileLoadException_Interop_40100_Tests
                 HResults.ERROR_FILE_INVALID,
             };
 
-        foreach (var hr in hrs)
-        {
-            var e = Marshal.GetExceptionForHR(hr);
-            Assert.IsType<FileLoadException>(e);
-            var fle = e as FileLoadException;
-            Assert.NotNull(fle);
-            // Don't validate the message.  Currently .NET Native does not produce HR-specific messages
-            Utility.ValidateExceptionProperties(fle, hResult: hr, validateMessage: false);
-            Assert.Equal(null, fle.FileName);
+            foreach (var hr in hrs)
+            {
+                var e = Marshal.GetExceptionForHR(hr) as FileLoadException;
+                var fle = e as FileLoadException;
+                Assert.NotNull(fle);
+
+                // Don't validate the message.  Currently .NET Native does not produce HR-specific messages
+                ExceptionUtility.ValidateExceptionProperties(fle, hResult: hr, validateMessage: false);
+                Assert.Equal(null, fle.FileName);
+            }
         }
     }
 }
