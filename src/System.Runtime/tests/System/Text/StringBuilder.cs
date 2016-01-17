@@ -1,281 +1,262 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Text;
 
 using Xunit;
 
-public static class StringBuilderTests
+namespace System.Runtime.Tests
 {
-    [Fact]
-    public static void TestToString()
+    public static class StringBuilderTests
     {
-        StringBuilder sb = new StringBuilder("Finally");
-        string s = sb.ToString(2, 3);
-        Assert.Equal(s, "nal");
-    }
-
-    [Fact]
-    public static void TestReplace()
-    {
-        StringBuilder sb;
-        string s;
-
-        sb = new StringBuilder("aaaabbbbccccdddd");
-        sb.Replace('a', '!', 2, 3);
-        s = sb.ToString();
-        Assert.Equal(s, "aa!!bbbbccccdddd");
-
-        sb = new StringBuilder("aaaabbbbccccdddd");
-        sb.Replace("a", "$!", 2, 3);
-        s = sb.ToString();
-        Assert.Equal(s, "aa$!$!bbbbccccdddd");
-    }
-
-    [Fact]
-    public static void TestRemove()
-    {
-        StringBuilder sb = new StringBuilder("Almost");
-        sb.Remove(1, 3);
-        string s = sb.ToString();
-        Assert.Equal(s, "Ast");
-    }
-
-    [Fact]
-    public static void TestInsert()
-    {
-        //@todo: Not testing all the Insert() overloads that just call ToString() on the input and forward to Insert(int, String).
-        StringBuilder sb = new StringBuilder("Hello");
-        sb.Insert(2, "!!");
-        string s = sb.ToString();
-        Assert.Equal(s, "He!!llo");
-    }
-
-    [Fact]
-    public static void TestEquals()
-    {
-        StringBuilder sb1 = new StringBuilder("Hello");
-        StringBuilder sb2 = new StringBuilder("HelloX");
-
-        bool b;
-        b = sb1.Equals(sb1);
-        Assert.True(b);
-        b = sb1.Equals(sb2);
-        Assert.False(b);
-    }
-
-    [Fact]
-    public static void TestCopyTo()
-    {
-        StringBuilder sb;
-        sb = new StringBuilder("Hello");
-        char[] ca = new char[10];
-        sb.CopyTo(1, ca, 5, 4);
-        Assert.Equal(ca[0], 0);
-        Assert.Equal(ca[1], 0);
-        Assert.Equal(ca[2], 0);
-        Assert.Equal(ca[3], 0);
-        Assert.Equal(ca[4], 0);
-        Assert.Equal(ca[5], 'e');
-        Assert.Equal(ca[6], 'l');
-        Assert.Equal(ca[7], 'l');
-        Assert.Equal(ca[8], 'o');
-        Assert.Equal(ca[9], 0);
-    }
-
-    [Fact]
-    public static void TestClear()
-    {
-        StringBuilder sb;
-        string s;
-
-        sb = new StringBuilder("Hello");
-        sb.Clear();
-        s = sb.ToString();
-        Assert.Equal(s, "");
-    }
-
-    [Fact]
-    public static void TestLength()
-    {
-        StringBuilder sb;
-        string s;
-        int len;
-
-        sb = new StringBuilder("Hello");
-        len = sb.Length;
-        Assert.Equal(len, 5);
-        sb.Length = 2;
-        len = sb.Length;
-        Assert.Equal(len, 2);
-        s = sb.ToString();
-        Assert.Equal(s, "He");
-        sb.Length = 10;
-        len = sb.Length;
-        Assert.Equal(len, 10);
-        s = sb.ToString();
-        Assert.Equal(s, "He" + new string((char)0, 8));
-    }
-
-    [Fact]
-    public static void TestAppendFormat()
-    {
-        StringBuilder sb;
-        string s;
-
-        sb = new StringBuilder();
-        sb.AppendFormat("Foo {0} Bar {1}", "Red", "Green");
-        s = sb.ToString();
-        Assert.Equal(s, "Foo Red Bar Green");
-    }
-
-    [Fact]
-    public static void TestAppend()
-    {
-        //@todo: Skipped all the Append overloads that just call ToString() on the argument and delegate to Append(String)
-
-        StringBuilder sb;
-        string s;
-
-        sb = new StringBuilder();
-        s = "";
-        for (int i = 0; i < 500; i++)
+        [Fact]
+        public static void TestCtor_Empty()
         {
-            char c = (char)(0x41 + (i % 10));
-            sb.Append(c);
-            s += c;
-            Assert.Equal(sb.ToString(), s);
+            var sb = new StringBuilder();
+            Assert.Equal("", sb.ToString());
+            Assert.Equal(0, sb.Length);
         }
 
-        sb = new StringBuilder();
-        s = "";
-        for (int i = 0; i < 500; i++)
+        [Fact]
+        public static void TestCtor_Int()
         {
-            char c = (char)(0x41 + (i % 10));
-            int repeat = i % 8;
-            sb.Append(c, repeat);
-            s += new string(c, repeat);
-            Assert.Equal(sb.ToString(), s);
+            var sb = new StringBuilder(42);
+            Assert.Equal("", sb.ToString());
+            Assert.Equal(0, sb.Length);
+
+            Assert.True(sb.Capacity >= 42);
         }
 
-        sb = new StringBuilder();
-        s = "";
-        for (int i = 0; i < 500; i++)
+        [Fact]
+        public static void TestCtor_Int_Int()
         {
-            char c = (char)(0x41 + (i % 10));
-            int repeat = i % 8;
-            char[] ca = new char[repeat];
-            for (int j = 0; j < ca.Length; j++)
-                ca[j] = c;
-            sb.Append(ca);
-            s += new string(ca);
-            Assert.Equal(sb.ToString(), s);
+            // The second int parameter is MaxCapacity but in CLR4.0 and later, StringBuilder isn't required to honor it.
+            var sb = new StringBuilder(42, 50);
+            Assert.Equal("", sb.ToString());
+            Assert.Equal(0, sb.Length);
+
+            Assert.True(sb.Capacity >= 42);
+            Assert.True(sb.Capacity < sb.MaxCapacity);
+            Assert.Equal(50, sb.MaxCapacity);
         }
 
-        sb = new StringBuilder();
-        s = "";
-        for (int i = 0; i < 500; i++)
+        [Fact]
+        public static void TestCtor_String()
         {
-            sb.Append("ab");
-            s += "ab";
-            Assert.Equal(sb.ToString(), s);
+            var sb = new StringBuilder("Hello");
+            Assert.Equal("Hello", sb.ToString());
+            Assert.Equal(5, sb.Length);
         }
 
-        sb = new StringBuilder();
-        s = "Hello";
-        sb.Append(s, 2, 3);
-        Assert.Equal(sb.ToString(), "llo");
-    }
-
-    [Fact]
-    public static void TestChars()
-    {
-        StringBuilder sb = new StringBuilder("Hello");
-        char c = sb[1];
-        Assert.Equal(c, 'e');
-        sb[1] = 'X';
-        string s = sb.ToString();
-        Assert.Equal(s, "HXllo");
-    }
-
-    [Fact]
-    public static void TestCtors()
-    {
-        StringBuilder sb;
-        string s;
-        int c;
-        int l;
-        int m;
-
-        sb = new StringBuilder();
-        s = sb.ToString();
-        Assert.Equal(s, "");
-        l = sb.Length;
-        Assert.Equal(l, 0);
-
-        sb = new StringBuilder(42);
-        c = sb.Capacity;
-        Assert.True(c >= 42);
-        l = sb.Length;
-        Assert.Equal(l, 0);
-
-        // The second int parameter is MaxCapacity but in CLR4.0 and later, StringBuilder isn't required to honor it.
-        sb = new StringBuilder(42, 50);
-        c = sb.Capacity;
-        Assert.True(c >= 42);
-        l = sb.Length;
-        Assert.Equal(l, 0);
-        m = sb.MaxCapacity;
-        Assert.Equal(m, 50);
-
-        sb = new StringBuilder("Hello");
-        s = sb.ToString();
-        Assert.Equal(s, "Hello");
-        l = sb.Length;
-        Assert.Equal(l, 5);
-
-        sb = new StringBuilder("Hello", 42);
-        s = sb.ToString();
-        Assert.Equal(s, "Hello");
-        c = sb.Capacity;
-        Assert.True(c >= 42);
-        l = sb.Length;
-        Assert.Equal(l, 5);
-
-        sb = new StringBuilder("Hello", 2, 3, 42);
-        s = sb.ToString();
-        Assert.Equal(s, "llo");
-        c = sb.Capacity;
-        Assert.True(c >= 42);
-        l = sb.Length;
-        Assert.Equal(l, 3);
-    }
-
-    [Fact]
-    public unsafe static void TestAppendUsingNativePointers()
-    {
-        StringBuilder sb = new StringBuilder();
-        string s = "abc ";
-        fixed (char* pS = s)
+        [Fact]
+        public static void TestCtor_String_Int()
         {
-            sb.Append(pS, s.Length);
-            sb.Append(pS, s.Length);
+            var sb = new StringBuilder("Hello", 42);
+            Assert.Equal("Hello", sb.ToString());
+            Assert.Equal(5, sb.Length);
+
+            Assert.True(sb.Capacity >= 42);
         }
-        Assert.True("abc abc ".Equals(sb.ToString(), StringComparison.Ordinal));
-    }
 
-    [Fact]
-    public unsafe static void TestAppendUsingNativePointerExceptions()
-    {
-        StringBuilder sb = new StringBuilder();
-        string s = "abc ";
-        fixed (char* pS = s)
+        [Fact]
+        public static void TestCtor_String_Int_Int_Int()
         {
-            Assert.Throws<NullReferenceException>(() => sb.Append(null, s.Length));
+            var sb = new StringBuilder("Hello", 2, 3, 42);
+            Assert.Equal("llo", sb.ToString());
+            Assert.Equal(3, sb.Length);
 
-            char* p = pS; // cannot use pS directly inside an anonymous method 
-            Assert.Throws<ArgumentOutOfRangeException>(() => sb.Append(p, -1));
+            Assert.True(sb.Capacity >= 42);
+        }
+
+        [Fact]
+        public static void TestToString()
+        {
+            StringBuilder sb = new StringBuilder("Finally");
+            Assert.Equal("Finally", sb.ToString());
+            Assert.Equal("nal", sb.ToString(2, 3));
+        }
+
+        [Fact]
+        public static void TestReplace()
+        {
+            var sb = new StringBuilder("aaaabbbbccccdddd");
+            sb.Replace('a', '!', 2, 3);
+            Assert.Equal("aa!!bbbbccccdddd", sb.ToString());
+
+            sb = new StringBuilder("aaaabbbbccccdddd");
+            sb.Replace("a", "$!", 2, 3);
+            Assert.Equal("aa$!$!bbbbccccdddd", sb.ToString());
+        }
+
+        [Fact]
+        public static void TestRemove()
+        {
+            var sb = new StringBuilder("Almost");
+            sb.Remove(1, 3);
+            Assert.Equal("Ast", sb.ToString());
+        }
+
+        [Fact]
+        public static void TestInsert()
+        {
+            //@todo: Not testing all the Insert() overloads that just call ToString() on the input and forward to Insert(int, String).
+            var sb = new StringBuilder("Hello");
+            sb.Insert(2, "!!");
+            Assert.Equal("He!!llo", sb.ToString());
+        }
+
+        [Fact]
+        public static void TestEquals()
+        {
+            var sb1 = new StringBuilder("Hello");
+            var sb2 = new StringBuilder("Hello");
+            var sb3 = new StringBuilder("HelloX");
+
+            Assert.True(sb1.Equals(sb1));
+            Assert.True(sb1.Equals(sb2));
+            Assert.False(sb1.Equals(sb3));
+        }
+
+        [Fact]
+        public static void TestCopyTo()
+        {
+            var sb = new StringBuilder("Hello");
+            char[] ca = new char[10];
+            sb.CopyTo(1, ca, 5, 4);
+
+            Assert.Equal(ca[0], 0);
+            Assert.Equal(ca[1], 0);
+            Assert.Equal(ca[2], 0);
+            Assert.Equal(ca[3], 0);
+            Assert.Equal(ca[4], 0);
+            Assert.Equal(ca[5], 'e');
+            Assert.Equal(ca[6], 'l');
+            Assert.Equal(ca[7], 'l');
+            Assert.Equal(ca[8], 'o');
+            Assert.Equal(ca[9], 0);
+        }
+
+        [Fact]
+        public static void TestClear()
+        {
+            var sb = new StringBuilder("Hello");
+            sb.Clear();
+            Assert.Equal("", sb.ToString());
+        }
+
+        [Fact]
+        public static void TestLength()
+        {
+            var sb = new StringBuilder("Hello");
+            Assert.Equal(5, 5);
+
+            sb.Length = 2;
+            Assert.Equal(2, sb.Length);
+            Assert.Equal("He", sb.ToString());
+            
+            sb.Length = 10;
+            Assert.Equal(10, sb.Length);
+            Assert.Equal("He" + new string((char)0, 8), sb.ToString());
+        }
+        
+        [Fact]
+        public static void TestAppend()
+        {
+            //@todo: Skipped all the Append overloads that just call ToString() on the argument and delegate to Append(String)
+            var sb = new StringBuilder();
+            string s = "";
+            for (int i = 0; i < 500; i++)
+            {
+                char c = (char)(0x41 + (i % 10));
+                sb.Append(c);
+                s += c;
+                Assert.Equal(s, sb.ToString());
+            }
+
+            sb = new StringBuilder();
+            s = "";
+            for (int i = 0; i < 500; i++)
+            {
+                char c = (char)(0x41 + (i % 10));
+                int repeat = i % 8;
+                sb.Append(c, repeat);
+                s += new string(c, repeat);
+                Assert.Equal(s, sb.ToString());
+            }
+
+            sb = new StringBuilder();
+            s = "";
+            for (int i = 0; i < 500; i++)
+            {
+                char c = (char)(0x41 + (i % 10));
+                int repeat = i % 8;
+                char[] ca = new char[repeat];
+                for (int j = 0; j < ca.Length; j++)
+                    ca[j] = c;
+                sb.Append(ca);
+                s += new string(ca);
+                Assert.Equal(s, sb.ToString());
+            }
+
+            sb = new StringBuilder();
+            s = "";
+            for (int i = 0; i < 500; i++)
+            {
+                sb.Append("ab");
+                s += "ab";
+                Assert.Equal(s, sb.ToString());
+            }
+
+            sb = new StringBuilder();
+            s = "Hello";
+            sb.Append(s, 2, 3);
+            Assert.Equal(sb.ToString(), "llo");
+        }
+        
+        [Fact]
+        public unsafe static void TestAppendUsingNativePointers()
+        {
+            StringBuilder sb = new StringBuilder();
+            string s = "abc ";
+            fixed (char* value = s)
+            {
+                sb.Append(value, s.Length);
+                sb.Append(value, s.Length);
+            }
+            Assert.Equal("abc abc ", sb.ToString());
+        }
+
+        [Fact]
+        public unsafe static void TestAppendUsingNativePointerExceptions()
+        {
+            StringBuilder sb = new StringBuilder();
+            string s = "abc ";
+            fixed (char* value = s)
+            {
+                Assert.Throws<NullReferenceException>(() => sb.Append(null, s.Length));
+
+                char* valuePointer = value; // Cannot use char* directly inside an anonymous method 
+                Assert.Throws<ArgumentOutOfRangeException>(() => sb.Append(valuePointer, -1));
+            }
+        }
+
+        [Fact]
+        public static void TestAppendFormat()
+        {
+            var sb = new StringBuilder();
+            sb.AppendFormat("Foo {0} Bar {1}", "Red", "Green");
+            Assert.Equal("Foo Red Bar Green", sb.ToString());
+        }
+
+        [Fact]
+        public static void TestChars()
+        {
+            var sb = new StringBuilder("Hello");
+            Assert.Equal('e', sb[1]);
+
+            sb[1] = 'X';
+            Assert.Equal('X', sb[1]);
+            Assert.Equal("HXllo", sb.ToString());
         }
     }
 }
