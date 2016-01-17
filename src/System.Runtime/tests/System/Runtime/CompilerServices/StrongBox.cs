@@ -24,18 +24,22 @@ namespace System.Runtime.CompilerServices.Tests
         [Fact]
         public static void TestValue()
         {
-            StrongBox<int> sb = new StrongBox<int>();
-            Assert.Equal(0, sb.Value);
-            sb.Value = 42;
-            Assert.Equal(42, sb.Value);
+            StrongBox<int> strongBox = new StrongBox<int>();
+            strongBox.Value = 42;
+            Assert.Equal(42, strongBox.Value);
 
-            IStrongBox isb = sb;
-            Assert.Equal(42, (int)isb.Value);
-            isb.Value = 84;
-            Assert.Equal(84, sb.Value);
-            Assert.Equal(84, (int)isb.Value);
+            IStrongBox iStrongBox = strongBox;
+            Assert.Equal(42, (int)iStrongBox.Value);
+            iStrongBox.Value = 84;
+            Assert.Equal(84, strongBox.Value);
+            Assert.Equal(84, (int)iStrongBox.Value);
+        }
 
-            Assert.Throws<InvalidCastException>(() => isb.Value = "test");
+        [Fact]
+        public static void TestSetValueInvalid()
+        {
+            IStrongBox iStrongBox = new StrongBox<int>();
+            Assert.Throws<InvalidCastException>(() => iStrongBox.Value = "test");
         }
     }
 }
