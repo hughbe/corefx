@@ -5,24 +5,29 @@ using System.Threading;
 
 using Xunit;
 
-namespace System.Tests
+namespace System.Runtime.Tests
 {
     public static class LazyTests
     {
         [Fact]
-        public static void TestConstructor()
+        public static void Test_Ctor()
         {
             // Make sure the default constructor does not throw
             new Lazy<object>();
-            Assert.Throws<ArgumentNullException>(() => new Lazy<object>(null));
         }
 
         [Fact]
-        public static void TestToString()
+        public static void TestCtor_Invalid()
+            {
+                Assert.Throws<ArgumentNullException>(() => new Lazy<object>(null));
+            }
+
+        [Fact]
+        public static void TestToString_DoesntForceAllocation()
         {
-            Lazy<object> lazy = new Lazy<object>(() => (object)1);
+            var lazy = new Lazy<object>(() => (object)1);
             Assert.NotEqual(1.ToString(), lazy.ToString());
-            Assert.False(lazy.IsValueCreated, "ToString shouldn't force allocation");
+            Assert.False(lazy.IsValueCreated);
 
             object tmp = lazy.Value;
             Assert.Equal(1.ToString(), lazy.ToString());
@@ -32,10 +37,10 @@ namespace System.Tests
         public static void TestIsValueCreated()
         {
             Lazy<string> lazy = new Lazy<string>(() => "Test");
-            Assert.False(lazy.IsValueCreated, "Expected lazy to be uninitialized.");
+            Assert.False(lazy.IsValueCreated);
 
             string temp = lazy.Value;
-            Assert.True(lazy.IsValueCreated, "Expected lazy to be initialized.");
+            Assert.True(lazy.IsValueCreated);
         }
 
         [Fact]
@@ -43,28 +48,24 @@ namespace System.Tests
         {
             string value = "Test";
             Lazy<string> lazy = new Lazy<string>(() => value);
-            string lazilyAllocatedValue = lazy.Value;
-            Assert.Equal(value, lazilyAllocatedValue);
+            Assert.Equal(value, lazy.Value);
 
             int valueInt = 99;
-            Lazy<int> LazyInt = new Lazy<int>(() => valueInt);
-            int lazilyAllocatedValueInt = LazyInt.Value;
-            Assert.Equal(valueInt, lazilyAllocatedValueInt);
+            var LazyInt = new Lazy<int>(() => valueInt);
+            Assert.Equal(valueInt, LazyInt.Value);
 
             lazy = new Lazy<string>(() => value, true);
-            lazilyAllocatedValue = lazy.Value;
-            Assert.Equal(value, lazilyAllocatedValue);
+            Assert.Equal(value, lazy.Value);
 
             lazy = new Lazy<string>(() => null, false);
-            lazilyAllocatedValue = lazy.Value;
-            Assert.Null(lazilyAllocatedValue);
+            Assert.Null(lazy.Value);
         }
 
         [Fact]
-        public static void TestValueExceptions()
+        public static void TestValue_Invalid()
         {
             string value = "Test";
-            Lazy<string> lazy = new Lazy<string>(() => value);
+            var lazy = new Lazy<string>(() => value);
             string lazilyAllocatedValue;
 
             Assert.Throws<InvalidOperationException>(() =>
@@ -90,59 +91,62 @@ namespace System.Tests
         }
 
         [Fact]
-        public static void TestValueFactoryExceptions()
+        public static void TestValue_ThrownException_DoesntCreateValue()
         {
-            Lazy<string> l = new Lazy<string>(() =>
-                {
-                    int zero = 0;
-                    int x = 1 / zero;
-                    return "";
-                }, true);
-            string s;
+            var lazy = new Lazy<string>(() =>
+            {
+                int zero = 0;
+                int x = 1 / zero;
+                return "";
+            }, true);
 
-            Assert.Throws<DivideByZeroException>(() => s = l.Value);
-            Assert.Throws<DivideByZeroException>(() => s = l.Value);
+            Assert.Throws<DivideByZeroException>(() => lazy.Value);
+            Assert.Throws<DivideByZeroException>(() => lazy.Value);
 
-            Assert.False(l.IsValueCreated, "Expected l to be uninitialized");
+            Assert.False(lazy.IsValueCreated);
         }
 
         [Fact]
-        public static void TestLazyInitializerSimpleRefTypes()
+        public static void TestEnsureInitalized_SimpleRefTypes()
         {
             HasDefaultCtor hdcTemplate = new HasDefaultCtor();
             string strTemplate = "foo";
 
             // Activator.CreateInstance (uninitialized).
             HasDefaultCtor a = null;
-            Assert.NotNull(LazyInitializer.EnsureInitialized<HasDefaultCtor>(ref a));
+            Assert.NotNull(LazyInitializer.EnsureInitialized(ref a));
             Assert.NotNull(a);
 
             // Activator.CreateInstance (already initialized).
             HasDefaultCtor b = hdcTemplate;
-            Assert.Equal(hdcTemplate, LazyInitializer.EnsureInitialized<HasDefaultCtor>(ref b));
+            Assert.Equal(hdcTemplate, LazyInitializer.EnsureInitialized(ref b));
             Assert.Equal(hdcTemplate, b);
 
             // Func based initialization (uninitialized).
             string c = null;
-            Assert.Equal(strTemplate, LazyInitializer.EnsureInitialized<string>(ref c, () => strTemplate));
+            Assert.Equal(strTemplate, LazyInitializer.EnsureInitialized(ref c, () => strTemplate));
             Assert.Equal(strTemplate, c);
 
             // Func based initialization (already initialized).
             string d = strTemplate;
-            Assert.Equal(strTemplate, LazyInitializer.EnsureInitialized<string>(ref d, () => strTemplate + "bar"));
+            Assert.Equal(strTemplate, LazyInitializer.EnsureInitialized(ref d, () => strTemplate + "bar"));
             Assert.Equal(strTemplate, d);
-
-            // Func based initialization (nulls not permitted).
-            string e = null;
-            Assert.Throws<InvalidOperationException>(() => LazyInitializer.EnsureInitialized<string>(ref e, () => null));
-
-            // Activator.CreateInstance (for a type without a default ctor).
-            NoDefaultCtor ndc = null;
-            Assert.Throws<MissingMemberException>(() => LazyInitializer.EnsureInitialized<NoDefaultCtor>(ref ndc));
         }
 
         [Fact]
-        public static void TestLazyInitializerComplexRefTypes()
+        public static void TestEnsureInitalized_SimpleRefTypes_Invalid()
+        {
+            // Func based initialization (nulls not permitted).
+            string e = null;
+            Assert.Throws<InvalidOperationException>(() => LazyInitializer.EnsureInitialized(ref e, () => null));
+
+            // Activator.CreateInstance (for a type without a default ctor).
+            NoDefaultCtor ndc = null;
+            Assert.Throws<MissingMemberException>(() => LazyInitializer.EnsureInitialized(ref ndc));
+        }
+
+        [Fact]
+        public static void TestEnsureInitialized_ComplexRefTypes()
         {
             string strTemplate = "foo";
             HasDefaultCtor hdcTemplate = new HasDefaultCtor();
@@ -151,28 +155,28 @@ namespace System.Tests
             HasDefaultCtor a = null;
             bool aInit = false;
             object aLock = null;
-            Assert.NotNull(LazyInitializer.EnsureInitialized<HasDefaultCtor>(ref a, ref aInit, ref aLock));
+            Assert.NotNull(LazyInitializer.EnsureInitialized(ref a, ref aInit, ref aLock));
             Assert.NotNull(a);
 
             // Activator.CreateInstance (already initialized).
             HasDefaultCtor b = hdcTemplate;
             bool bInit = true;
             object bLock = null;
-            Assert.Equal(hdcTemplate, LazyInitializer.EnsureInitialized<HasDefaultCtor>(ref b, ref bInit, ref bLock));
+            Assert.Equal(hdcTemplate, LazyInitializer.EnsureInitialized(ref b, ref bInit, ref bLock));
             Assert.Equal(hdcTemplate, b);
 
             // Func based initialization (uninitialized).
             string c = null;
             bool cInit = false;
             object cLock = null;
-            Assert.Equal(strTemplate, LazyInitializer.EnsureInitialized<string>(ref c, ref cInit, ref cLock, () => strTemplate));
+            Assert.Equal(strTemplate, LazyInitializer.EnsureInitialized(ref c, ref cInit, ref cLock, () => strTemplate));
             Assert.Equal(strTemplate, c);
 
             // Func based initialization (already initialized).
             string d = strTemplate;
             bool dInit = true;
             object dLock = null;
-            Assert.Equal(strTemplate, LazyInitializer.EnsureInitialized<string>(ref d, ref dInit, ref dLock, () => strTemplate + "bar"));
+            Assert.Equal(strTemplate, LazyInitializer.EnsureInitialized(ref d, ref dInit, ref dLock, () => strTemplate + "bar"));
             Assert.Equal(strTemplate, d);
 
             // Func based initialization (nulls *ARE* permitted).
@@ -181,29 +185,33 @@ namespace System.Tests
             object elock = null;
             int initCount = 0;
 
-            Assert.Null(LazyInitializer.EnsureInitialized<string>(ref e, ref einit, ref elock, () => { initCount++; return null; }));
+            Assert.Null(LazyInitializer.EnsureInitialized(ref e, ref einit, ref elock, () => { initCount++; return null; }));
             Assert.Null(e);
             Assert.Equal(1, initCount);
-            Assert.Null(LazyInitializer.EnsureInitialized<string>(ref e, ref einit, ref elock, () => { initCount++; return null; }));
+            Assert.Null(LazyInitializer.EnsureInitialized(ref e, ref einit, ref elock, () => { initCount++; return null; }));
+        }
 
+        [Fact]
+        public static void TestEnsureInitalized_ComplexRefTypes_Invalid()
+        {
             // Activator.CreateInstance (for a type without a default ctor).
             NoDefaultCtor ndc = null;
             bool ndcInit = false;
             object ndcLock = null;
-            Assert.Throws<MissingMemberException>(() => LazyInitializer.EnsureInitialized<NoDefaultCtor>(ref ndc, ref ndcInit, ref ndcLock));
+            Assert.Throws<MissingMemberException>(() => LazyInitializer.EnsureInitialized(ref ndc, ref ndcInit, ref ndcLock));
         }
 
         [Fact]
         public static void TestLazyInitializerComplexValueTypes()
         {
-            LIX empty = new LIX();
-            LIX template = new LIX(33);
+            var empty = new LIX();
+            var template = new LIX(33);
 
             // Activator.CreateInstance (uninitialized).
             LIX a = default(LIX);
             bool aInit = false;
             object aLock = null;
-            LIX ensuredValA = LazyInitializer.EnsureInitialized<LIX>(ref a, ref aInit, ref aLock);
+            LIX ensuredValA = LazyInitializer.EnsureInitialized(ref a, ref aInit, ref aLock);
             Assert.Equal(empty, ensuredValA);
             Assert.Equal(empty, a);
 
@@ -211,7 +219,7 @@ namespace System.Tests
             LIX b = template;
             bool bInit = true;
             object bLock = null;
-            LIX ensuredValB = LazyInitializer.EnsureInitialized<LIX>(ref b, ref bInit, ref bLock);
+            LIX ensuredValB = LazyInitializer.EnsureInitialized(ref b, ref bInit, ref bLock);
             Assert.Equal(template, ensuredValB);
             Assert.Equal(template, b);
 
@@ -219,7 +227,7 @@ namespace System.Tests
             LIX c = default(LIX);
             bool cInit = false;
             object cLock = null;
-            LIX ensuredValC = LazyInitializer.EnsureInitialized<LIX>(ref c, ref cInit, ref cLock, () => template);
+            LIX ensuredValC = LazyInitializer.EnsureInitialized(ref c, ref cInit, ref cLock, () => template);
             Assert.Equal(template, c);
             Assert.Equal(template, ensuredValC);
 
@@ -228,13 +236,11 @@ namespace System.Tests
             bool dInit = true;
             object dLock = null;
             LIX template2 = new LIX(template.f * 2);
-            LIX ensuredValD = LazyInitializer.EnsureInitialized<LIX>(ref d, ref dInit, ref dLock, () => template2);
+            LIX ensuredValD = LazyInitializer.EnsureInitialized(ref d, ref dInit, ref dLock, () => template2);
             Assert.Equal(template, ensuredValD);
             Assert.Equal(template, d);
         }
-
-        #region Helper Classes and Methods
-
+        
         private class HasDefaultCtor { }
 
         private class NoDefaultCtor
@@ -244,13 +250,12 @@ namespace System.Tests
 
         private struct LIX
         {
-            internal int f;
             public LIX(int f) { this.f = f; }
+
+            public int f;
             public override bool Equals(object other) { return other is LIX && ((LIX)other).f == f; }
             public override int GetHashCode() { return f.GetHashCode(); }
             public override string ToString() { return "LIX<" + f + ">"; }
         }
-
-        #endregion
     }
 }
