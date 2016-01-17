@@ -1,132 +1,173 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-
 using Xunit;
 
-public static unsafe class IntPtrTests
+namespace System.Runtime.Tests
 {
-    [Fact]
-    public static unsafe void TestBasics()
+    public static class IntPtrTests
     {
-        if (sizeof(void*) == 4)
+
+        private static unsafe bool s_runTests = sizeof(void*) != 4; // Skip IntPtr tests on 32-bit platforms
+
+        [Fact]
+        public static unsafe void TestSize()
         {
-            // Skip IntPtr tests on 32-bit platforms
-            return;
+            if (!s_runTests)
+                return;
+
+            Assert.Equal(sizeof(void*), IntPtr.Size);
         }
 
-        IntPtr p;
-        int i;
-        long l;
-
-        int size = IntPtr.Size;
-        Assert.Equal(size, sizeof(void*));
-
-        TestPointer(IntPtr.Zero, 0);
-
-        i = 42;
-        TestPointer(new IntPtr(i), i);
-        TestPointer((IntPtr)i, i);
-
-        i = 42;
-        TestPointer(new IntPtr(i), i);
-
-        i = -1;
-        TestPointer(new IntPtr(i), i);
-
-        l = 0x0fffffffffffffff;
-        TestPointer(new IntPtr(l), l);
-        TestPointer((IntPtr)l, l);
-
-        void* pv = new IntPtr(42).ToPointer();
-        TestPointer(new IntPtr(pv), 42);
-        TestPointer((IntPtr)pv, 42);
-
-        p = IntPtr.Add(new IntPtr(42), 5);
-        TestPointer(p, 42 + 5);
-
-        // Add is spected NOT to generate an OverflowException
-        p = IntPtr.Add(new IntPtr(0x7fffffffffffffff), 5);
-        unchecked
+        [Fact]
+        public static void TestZero()
         {
-            TestPointer(p, (long)0x8000000000000004);
+            if (!s_runTests)
+                return;
+
+            TestPointer(IntPtr.Zero, 0);
         }
 
-        p = IntPtr.Subtract(new IntPtr(42), 5);
-        TestPointer(p, 42 - 5);
-
-        bool b;
-        p = new IntPtr(42);
-        b = p.Equals(null);
-        Assert.False(b);
-        b = p.Equals((object)42);
-        Assert.False(b);
-        b = p.Equals((object)(new IntPtr(42)));
-        Assert.True(b);
-
-        int h = p.GetHashCode();
-        int h2 = p.GetHashCode();
-        Assert.Equal(h, h2);
-
-        p = new IntPtr(42);
-        i = (int)p;
-        Assert.Equal(i, 42);
-        l = (long)p;
-        Assert.Equal(l, 42);
-        IntPtr p2;
-        p2 = (IntPtr)i;
-        Assert.Equal(p, p2);
-        p2 = (IntPtr)l;
-        Assert.Equal(p, p2);
-        p2 = (IntPtr)(p.ToPointer());
-        Assert.Equal(p, p2);
-        p2 = new IntPtr(40) + 2;
-        Assert.Equal(p, p2);
-        p2 = new IntPtr(44) - 2;
-        Assert.Equal(p, p2);
-
-        p = new IntPtr(0x7fffffffffffffff);
-        Assert.Throws<OverflowException>(() => { i = (int)p; });
-    }
-
-    private static void TestPointer(IntPtr p, long expected)
-    {
-        long l = p.ToInt64();
-        Assert.Equal(l, expected);
-
-        int expected32 = (int)expected;
-        if (expected32 != expected)
+        [Fact]
+        public static void TestCtor_Int()
         {
-            Assert.Throws<OverflowException>(() => { int i = p.ToInt32(); });
-            return;
+            if (!s_runTests)
+                return;
+
+            int i = 42;
+            TestPointer(new IntPtr(i), i);
+            TestPointer((IntPtr)i, i);
+
+            i = -1;
+            TestPointer(new IntPtr(i), i);
+            TestPointer((IntPtr)i, i);
         }
 
+        [Fact]
+        public static void TestCtor_Long()
         {
+            if (!s_runTests)
+                return;
+
+            long l = 0x0fffffffffffffff;
+            TestPointer(new IntPtr(l), l);
+            TestPointer((IntPtr)l, l);
+        }
+
+        [Fact]
+        public static unsafe void TestCtor_VoidPointer_ToPointer()
+        {
+            if (!s_runTests)
+                return;
+
+            void* pv = new IntPtr(42).ToPointer();
+            TestPointer(new IntPtr(pv), 42);
+            TestPointer((IntPtr)pv, 42);
+        }
+
+        [Fact]
+        public static void TestAdd()
+        {
+            if (!s_runTests)
+                return;
+
+            IntPtr p = IntPtr.Add(new IntPtr(42), 5);
+            TestPointer(p, 42 + 5);
+
+            p = new IntPtr(40) + 2;
+            Assert.Equal(new IntPtr(42), p);
+
+            // Add is spected NOT to generate an OverflowException
+            p = IntPtr.Add(new IntPtr(0x7fffffffffffffff), 5);
+            unchecked
+            {
+                TestPointer(p, (long)0x8000000000000004);
+            }
+        }
+
+        [Fact]
+        public static void TestSubtract()
+        {
+            if (!s_runTests)
+                return;
+
+            IntPtr p = IntPtr.Subtract(new IntPtr(42), 5);
+            TestPointer(p, 42 - 5);
+
+            p = new IntPtr(44) - 2;
+            Assert.Equal(new IntPtr(42), p);
+        }
+
+        [Fact]
+        public static void TestEquals()
+        {
+            if (!s_runTests)
+                return;
+
+            var p1 = new IntPtr(42);
+            var p2 = new IntPtr(42);
+
+            Assert.True(p1.Equals(p1));
+            Assert.Equal(p1.GetHashCode(), p1.GetHashCode());
+
+            Assert.True(p1.Equals(p2));
+            Assert.Equal(p1.GetHashCode(), p2.GetHashCode());
+
+            Assert.False(p1.Equals(42));
+            Assert.False(p1.Equals(null));
+
+            int h = p1.GetHashCode();
+            int h2 = p1.GetHashCode();
+            Assert.Equal(h, h2);
+        }
+
+        [Fact]
+        public static unsafe void TestImplicitCast()
+        {
+            if (!s_runTests)
+                return;
+
+            var p = new IntPtr(42);
+
+            uint i = (uint)p;
+            ulong l = (ulong)p;
+            void* v = p.ToPointer();
+
+            Assert.Equal(42u, i);
+            Assert.Equal(42u, l);
+
+            Assert.Equal(p, (IntPtr)i);
+            Assert.Equal(p, (IntPtr)l);
+            Assert.Equal(p, (IntPtr)v);
+
+            p = new IntPtr(0x7fffffffffffffff);
+            Assert.Throws<OverflowException>(() => (int)p);
+        }
+        
+        private static void TestPointer(IntPtr p, long expected)
+        {
+            Assert.Equal(expected, p.ToInt64());
+
+            int expected32 = (int)expected;
+            if (expected32 != expected)
+            {
+                Assert.Throws<OverflowException>(() => p.ToInt32());
+                return;
+            }
+            
             int i = p.ToInt32();
-            Assert.Equal(i, expected32);
+            Assert.Equal(expected32, p.ToInt32());
+            
+            Assert.Equal(expected.ToString(), p.ToString());
+            Assert.Equal(expected.ToString("x"), p.ToString("x"));
+            
+            Assert.Equal(p, new IntPtr(expected));
+            Assert.True(p == new IntPtr(expected));
+            Assert.False(p != new IntPtr(expected));
+
+            Assert.NotEqual(p, new IntPtr(expected + 1));
+            Assert.False(p == new IntPtr(expected + 1));
+            Assert.True(p != new IntPtr(expected + 1));
         }
-
-        string s = p.ToString();
-        string sExpected = expected.ToString();
-        Assert.Equal(s, sExpected);
-
-        s = p.ToString("x");
-        sExpected = expected.ToString("x");
-        Assert.Equal(s, sExpected);
-
-        bool b;
-
-        b = (p == new IntPtr(expected));
-        Assert.True(b);
-
-        b = (p == new IntPtr(expected + 1));
-        Assert.False(b);
-
-        b = (p != new IntPtr(expected));
-        Assert.False(b);
-
-        b = (p != new IntPtr(expected + 1));
-        Assert.True(b);
     }
 }
