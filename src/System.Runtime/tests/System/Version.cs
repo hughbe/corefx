@@ -1,212 +1,229 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
+using System.Collections.Generic;
+using System.Runtime.Tests.Common;
 
 using Xunit;
 
-public class VersionTests
+namespace System.Runtime.Tests
 {
-    [Fact]
-    public void TestMajorMinorConstructor()
+    public static class VersionTests
     {
-        VerifyConstructor(0, 0);
-        VerifyConstructor(2, 3);
-        VerifyConstructor(int.MaxValue, int.MaxValue);
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Version(-1, 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Version(0, -1));
-    }
+        [Theory]
+        [InlineData(0, 0)]
+        [InlineData(2, 3)]
+        [InlineData(int.MaxValue, int.MaxValue)]
+        public static void TestCtor_Int_Int(int major, int minor)
+        {
+            VerifyConstructor(major, minor);
+        }
 
-    private static void VerifyConstructor(int major, int minor)
-    {
-        var version = new Version(major, minor);
-        VerifyVersion(version, major, minor, -1, -1);
-    }
+        [Fact]
+        public static void TestCtor_Int_Int_Invalid()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Version(-1, 0)); // Major < 0
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Version(0, -1)); // Minor < 0
+        }
 
-    [Fact]
-    public void TestMajorMinorBuildConstructor()
-    {
-        VerifyConstructor(0, 0, 0);
-        VerifyConstructor(2, 3, 4);
-        VerifyConstructor(int.MaxValue, int.MaxValue, int.MaxValue);
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Version(-1, 0, 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Version(0, -1, 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Version(0, 0, -1));
-    }
+        [Theory]
+        [InlineData(0, 0, 0)]
+        [InlineData(2, 3, 4)]
+        [InlineData(int.MaxValue, int.MaxValue, int.MaxValue)]
+        public static void TestCtor_Int_Int_Int(int major, int minor, int build)
+        {
+            VerifyConstructor(major, minor, build);
+        }
 
-    private static void VerifyConstructor(int major, int minor, int build)
-    {
-        var version = new Version(major, minor, build);
-        VerifyVersion(version, major, minor, build, -1);
-    }
+        [Fact]
+        public static void TestCtor_Int_Int_Int_Invalid()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Version(-1, 0, 0)); // Major < 0
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Version(0, -1, 0)); // Minor < 0
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Version(0, 0, -1)); // Build < 0
+        }
 
-    [Fact]
-    public void TestMajorMinorBuildRevisionConstructor()
-    {
-        VerifyConstructor(0, 0, 0, 0);
-        VerifyConstructor(2, 3, 4, 7);
-        VerifyConstructor(2, 3, 4, 65535);
-        VerifyConstructor(2, 3, 4, 65536);
-        VerifyConstructor(2, 3, 4, 32767);
-        VerifyConstructor(2, 3, 4, 32768);
-        VerifyConstructor(2, 3, 4, 2147483647);
-        VerifyConstructor(2, 3, 4, 2147450879);
-        VerifyConstructor(2, 3, 4, 2147418112);
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Version(-1, 0, 0, 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Version(0, -1, 0, 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Version(0, 0, -1, 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Version(0, 0, 0, -1));
-    }
+        [Theory]
+        [InlineData(0, 0, 0, 0)]
+        [InlineData(2, 3, 4, 7)]
+        [InlineData(int.MaxValue, int.MaxValue, int.MaxValue, int.MaxValue)]
+        public static void TestMajorMinorBuildRevisionConstructor(int major, int minor, int build, int revision)
+        {
+            VerifyConstructor(major, minor, build, revision);
+        }
 
-    private static void VerifyConstructor(int major, int minor, int build, int revision)
-    {
-        var version = new Version(major, minor, build, revision);
-        VerifyVersion(version, major, minor, build, revision);
-    }
+        [Fact]
+        public static void TestCtor_Int_Int_Int_Int_Invalid()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Version(-1, 0, 0, 0)); // Major < 0
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Version(0, -1, 0, 0)); // Minor < 0
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Version(0, 0, -1, 0)); // Build < 0
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Version(0, 0, 0, -1)); // Revision < 0
+        }
 
-    private static void VerifyVersion(Version version, int major, int minor, int build, int revision)
-    {
-        Assert.Equal(major, version.Major);
-        Assert.Equal(minor, version.Minor);
-        Assert.Equal(build, version.Build);
-        Assert.Equal(revision, version.Revision);
-        Assert.Equal((short)(revision >> 16), version.MajorRevision);
-        Assert.Equal((short)(revision & 0xFFFF), version.MinorRevision);
-    }
+        private static void VerifyConstructor(int major, int minor)
+        {
+            var version = new Version(major, minor);
+            VerifyVersion(version, major, minor, -1, -1);
+        }
 
-    [Fact]
-    public void CompareToObject()
-    {
-        var x = (IComparable)new Version(1, 2);
-        Assert.Equal(1, x.CompareTo(null));
-        Assert.Equal(0, x.CompareTo(new Version(1, 2)));
-        Assert.True(x.CompareTo(new Version(1, 3)) < 0);
-        Assert.True(x.CompareTo(new Version(2, 0)) < 0);
-        Assert.True(x.CompareTo(new Version(1, 2, 1)) < 0);
-        Assert.True(x.CompareTo(new Version(1, 2, 0, 1)) < 0);
-        Assert.True(x.CompareTo(new Version(1, 0)) > 0);
-        Assert.True(x.CompareTo(new Version(1, 0, 1)) > 0);
-        Assert.True(x.CompareTo(new Version(1, 0, 0, 1)) > 0);
-    }
+        private static void VerifyConstructor(int major, int minor, int build)
+        {
+            var version = new Version(major, minor, build);
+            VerifyVersion(version, major, minor, build, -1);
+        }
 
-    [Fact]
-    public void TestCompareTo()
-    {
-        var x = new Version(1, 2);
-        Assert.Equal(0, x.CompareTo(new Version(1, 2)));
-        Assert.True(x.CompareTo(new Version(1, 3)) < 0);
-        Assert.True(x.CompareTo(new Version(2, 0)) < 0);
-        Assert.True(x.CompareTo(new Version(1, 2, 1)) < 0);
-        Assert.True(x.CompareTo(new Version(1, 2, 0, 1)) < 0);
-        Assert.True(x.CompareTo(new Version(1, 0)) > 0);
-        Assert.True(x.CompareTo(new Version(1, 0, 1)) > 0);
-        Assert.True(x.CompareTo(new Version(1, 0, 0, 1)) > 0);
-    }
+        private static void VerifyConstructor(int major, int minor, int build, int revision)
+        {
+            var version = new Version(major, minor, build, revision);
+            VerifyVersion(version, major, minor, build, revision);
+        }
 
-    [Fact]
-    public void TestEqualsObject()
-    {
-        var x = new Version(2, 3);
-        Assert.Equal(x, (object)x);
-        var y = (object)x;
-        Assert.Equal(x, y);
+        private static void VerifyVersion(Version version, int major, int minor, int build, int revision)
+        {
+            Assert.Equal(major, version.Major);
+            Assert.Equal(minor, version.Minor);
+            Assert.Equal(build, version.Build);
+            Assert.Equal(revision, version.Revision);
+            Assert.Equal((short)(revision >> 16), version.MajorRevision);
+            Assert.Equal((short)(revision & 0xFFFF), version.MinorRevision);
+        }
 
-        y = (object)new Version(2, 4);
-        Assert.NotEqual(x, y);
-    }
+        public static IEnumerable<object[]> CompareToData()
+        {
+            yield return new object [] { null, 1 };
+            yield return new object[] { new Version(1, 2), 0 };
+            yield return new object[] { new Version(2, 0), -1 };
+            yield return new object[] { new Version(1, 2, 1), -1 };
+            yield return new object[] { new Version(1, 2, 0, 1), -1 };
+            yield return new object[] { new Version(1, 0), 1 };
+            yield return new object[] { new Version(1, 0, 1), 1 };
+            yield return new object[] { new Version(1, 0, 0, 1), 1 };
+        }
+        
+        [Theory]
+        [MemberData("CompareToData")]
+        public static void TestCompareTo(Version value, int expected)
+        {
+            var version = new Version(1, 2);
+            Assert.Equal(expected, CompareHelper.NormalizeCompare(version.CompareTo(value)));
 
-    [Fact]
-    public void TestEquals()
-    {
-        var x = new Version(2, 3);
-        Assert.Equal(x, x);
-        var y = new Version(2, 3);
-        Assert.Equal(x, y);
-        Assert.NotEqual(x, new Version(2, 4));
-    }
+            IComparable iComparable = version;
+            Assert.Equal(expected, CompareHelper.NormalizeCompare(iComparable.CompareTo(value)));
+        }
 
-    [Fact]
-    public void TestGetHashCode()
-    {
-        var x = new Version(2, 3);
-        var y = new Version(2, 3);
-        Assert.Equal(x.GetHashCode(), y.GetHashCode());
+        private static IEnumerable<object[]> EqualsData()
+        {
+            yield return new object[] { new Version(2, 3), new Version(2, 3), true };
+            yield return new object[] { new Version(2, 3, 4), new Version(2, 3, 4), true };
+            yield return new object[] { new Version(2, 3, 4, 5), new Version(2, 3, 4, 5), true };
 
-        x = new Version(2, 3, 4);
-        y = new Version(2, 3, 4);
-        Assert.Equal(x.GetHashCode(), y.GetHashCode());
+            yield return new object[] { new Version(5, 5), new Version(5, 4), false };
+            yield return new object[] { new Version(10, 10, 10), new Version(10, 10, 2), false };
+            yield return new object[] { new Version(10, 10, 10, 10), new Version(10, 10, 10, 3), false };
+            yield return new object[] { new Version(10, 10, 10, 10), new Version(10, 10), false };
+        }
 
-        x = new Version(2, 3, 4, 0x000E000F);
-        y = new Version(2, 3, 4, 0x000E000F);
-        Assert.Equal(x.GetHashCode(), y.GetHashCode());
+        [Fact]
+        public static void TestEquals_Object()
+        {
+            var x = new Version(2, 3);
+            Assert.Equal(x, (object)x);
 
-        x = new Version(5, 5);
-        y = new Version(5, 4);
-        Assert.NotEqual(x.GetHashCode(), y.GetHashCode());
+            var y = (object)x;
+            Assert.Equal(x, y);
 
-        x = new Version(10, 10, 10);
-        y = new Version(10, 10, 2);
-        Assert.NotEqual(x.GetHashCode(), y.GetHashCode());
+            y = new Version(2, 4);
+            Assert.NotEqual(x, y);
+        }
+        
+        [Theory]
+        [MemberData("EqualsData")]
+        public static void TestEquals(Version version1, Version version2, bool equal)
+        {
+            Assert.Equal(version1, version1);
 
-        x = new Version(10, 10, 10, 10);
-        y = new Version(10, 10, 10, 3);
-        Assert.NotEqual(x.GetHashCode(), y.GetHashCode());
+            Assert.Equal(equal, version1.Equals(version2));
+            Assert.Equal(equal, version2.Equals(version1));
+        }
 
-        x = new Version(10, 10, 10, 10);
-        y = new Version(10, 10);
-        Assert.NotEqual(x.GetHashCode(), y.GetHashCode());
-    }
+        [Theory]
+        [MemberData("EqualsData")]
+        public static void TestGetHashCode(Version version1, Version version2, bool equal)
+        {
+            Assert.Equal(equal, version1.GetHashCode().Equals(version2.GetHashCode()));
+        }
 
-    [Fact]
-    public void TestToString()
-    {
-        Assert.Equal("1.2", new Version(1, 2).ToString());
-        Assert.Equal("1.2.3", new Version(1, 2, 3).ToString());
-        Assert.Equal("1.2.3.4", new Version(1, 2, 3, 4).ToString());
-    }
+        [Fact]
+        public static void TestToString()
+        {
+            Assert.Equal("1.2", new Version(1, 2).ToString());
+            Assert.Equal("1.2.3", new Version(1, 2, 3).ToString());
+            Assert.Equal("1.2.3.4", new Version(1, 2, 3, 4).ToString());
+        }
 
-    [Fact]
-    public void TestToStringFieldCount()
-    {
-        var version = new Version(5, 3);
-        Assert.Equal(string.Empty, version.ToString(0));
-        Assert.Equal("5", version.ToString(1));
-        Assert.Equal("5.3", version.ToString(2));
-        Assert.Throws<ArgumentException>(() => version.ToString(3));
-        Assert.Throws<ArgumentException>(() => version.ToString(4));
-        Assert.Throws<ArgumentException>(() => version.ToString(5));
-        Assert.Throws<ArgumentException>(() => version.ToString(-1));
+        [Fact]
+        public static void TestToStringFieldCount()
+        {
+            var version = new Version(5, 3);
+            Assert.Equal(string.Empty, version.ToString(0));
+            Assert.Equal("5", version.ToString(1));
+            Assert.Equal("5.3", version.ToString(2));
+            Assert.Throws<ArgumentException>(() => version.ToString(3));
+            Assert.Throws<ArgumentException>(() => version.ToString(4));
+            Assert.Throws<ArgumentException>(() => version.ToString(5));
+            Assert.Throws<ArgumentException>(() => version.ToString(-1));
 
-        version = new Version(10, 11, 12);
-        Assert.Equal(string.Empty, version.ToString(0));
-        Assert.Equal("10", version.ToString(1));
-        Assert.Equal("10.11", version.ToString(2));
-        Assert.Equal("10.11.12", version.ToString(3));
-        Assert.Throws<ArgumentException>(() => version.ToString(4));
-        Assert.Throws<ArgumentException>(() => version.ToString(5));
-        Assert.Throws<ArgumentException>(() => version.ToString(-1));
+            version = new Version(10, 11, 12);
+            Assert.Equal(string.Empty, version.ToString(0));
+            Assert.Equal("10", version.ToString(1));
+            Assert.Equal("10.11", version.ToString(2));
+            Assert.Equal("10.11.12", version.ToString(3));
+            Assert.Throws<ArgumentException>(() => version.ToString(4));
+            Assert.Throws<ArgumentException>(() => version.ToString(5));
+            Assert.Throws<ArgumentException>(() => version.ToString(-1));
 
-        version = new Version(1, 2, 3, 4);
-        Assert.Equal(string.Empty, version.ToString(0));
-        Assert.Equal("1", version.ToString(1));
-        Assert.Equal("1.2", version.ToString(2));
-        Assert.Equal("1.2.3", version.ToString(3));
-        Assert.Equal("1.2.3.4", version.ToString(4));
-        Assert.Throws<ArgumentException>(() => version.ToString(5));
-        Assert.Throws<ArgumentException>(() => version.ToString(-1));
-    }
+            version = new Version(1, 2, 3, 4);
+            Assert.Equal(string.Empty, version.ToString(0));
+            Assert.Equal("1", version.ToString(1));
+            Assert.Equal("1.2", version.ToString(2));
+            Assert.Equal("1.2.3", version.ToString(3));
+            Assert.Equal("1.2.3.4", version.ToString(4));
+            Assert.Throws<ArgumentException>(() => version.ToString(5));
+            Assert.Throws<ArgumentException>(() => version.ToString(-1));
+        }
 
-    [Fact]
-    public void TestParse()
-    {
-        Assert.Equal(new Version(1, 2), Version.Parse("1.2"));
-        Assert.Equal(new Version(1, 2, 3), Version.Parse("1.2.3"));
-        Assert.Equal(new Version(1, 2, 3, 4), Version.Parse("1.2.3.4"));
-        Assert.Equal(new Version(2, 3, 4, 15), Version.Parse("2  .3.    4.  \t\r\n15  "));
+        private static IEnumerable<object[]> ParseData()
+        {
+            yield return new object[] { "1.2", new Version(1, 2) };
+            yield return new object[] { "1.2.3", new Version(1, 2, 3) };
+            yield return new object[] { "1.2.3.4", new Version(1, 2, 3, 4) };
+            yield return new object[] { "2  .3.    4.  \t\r\n15  ", new Version(2, 3, 4, 15) };
+        }
 
-        Assert.Throws<ArgumentException>(() => Version.Parse("1,2,3,4"));
-        Assert.Throws<ArgumentException>(() => Version.Parse("1"));
-        Assert.Throws<FormatException>(() => Version.Parse("1.b.3.4"));
-        Assert.Throws<ArgumentOutOfRangeException>(() => Version.Parse("1.-2"));
+        [Theory]
+        [MemberData("ParseData")]
+        public static void TestParse(string input, Version expected)
+        {
+            Assert.Equal(expected, Version.Parse(input));
+
+            Version version;
+            Assert.True(Version.TryParse(input, out version));
+            Assert.Equal(expected, version);
+        }
+
+        [Theory]
+        [InlineData(null, typeof(ArgumentNullException))]
+        [InlineData("1,2,3,4", typeof(ArgumentException))]
+        [InlineData("1", typeof(ArgumentException))]
+        [InlineData("1.b.3.4", typeof(FormatException))]
+        [InlineData("1.-1", typeof(ArgumentOutOfRangeException))]
+        [InlineData("1.5000000000000", typeof(OverflowException))]
+        public static void TestParse_Invalid(string input, Type exceptionType)
+        {
+            Assert.Throws(exceptionType, () => Version.Parse(input));
+            Version version;
+            Assert.False(Version.TryParse(input, out version));
+        }
     }
 }
