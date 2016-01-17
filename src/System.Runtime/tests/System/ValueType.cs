@@ -3,22 +3,26 @@
 
 using Xunit;
 
-public static unsafe class ValueTypeTests
+namespace System.Runtime.Tests
 {
-    [Fact]
-    public static void TestToString()
+    public static class ValueTypeTests
     {
-        object o = new S();
-        string s = o.ToString();
-        Assert.NotNull(s);
-        string s1 = o.GetType().ToString();
-        Assert.Equal(s, s1);
-        Assert.Equal("ValueTypeTests+S", s);
-    }
+        [Fact]
+        public static void TestToString()
+        {
+            object o = new S();
+            string s = o.ToString();
+            Assert.NotNull(s);
 
-    public struct S
-    {
-        public int x;
-        public int y;
+            string s1 = o.GetType().ToString();
+            Assert.Equal(s, s1);
+            Assert.Equal("System.Runtime.Tests.ValueTypeTests+S", s);
+        }
+
+        public struct S
+        {
+            public int x;
+            public int y;
+        }
     }
 }
