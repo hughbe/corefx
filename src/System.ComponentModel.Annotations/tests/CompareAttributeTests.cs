@@ -9,30 +9,38 @@ namespace System.ComponentModel.DataAnnotations
     public class CompareAttributeTests
     {
         [Fact]
-        public static void Constructor_Null_OtherProperty()
+        public static void Constructor_NullOtherProperty_ThrowsArgumentNullException()
         {
-            Assert.Throws<ArgumentNullException>(() => new CompareAttribute(otherProperty: null));
+            Assert.Throws<ArgumentNullException>("otherProperty", () => new CompareAttribute(null));
+        }
+
+        [Theory]
+        [InlineData("OtherProperty")]
+        [InlineData("")]
+        public static void Constructor(string otherProperty)
+        {
+            CompareAttribute attribute = new CompareAttribute(otherProperty);
+            Assert.Equal(otherProperty, attribute.OtherProperty);
+
+            Assert.True(attribute.RequiresValidationContext);
         }
 
         [Fact]
-        public static void Constructor_NonNull_OtherProperty()
-        {
-            AssertEx.DoesNotThrow(() => new CompareAttribute("OtherProperty"));
-        }
-
-        [Fact]
-        public static void Validate_does_not_throw_when_compared_objects_are_equal()
+        public static void Validate_EqualObjects_DoesNotThrow()
         {
             var otherObject = new CompareObject("test");
             var currentObject = new CompareObject("test");
             var testContext = new ValidationContext(otherObject, null, null);
 
             var attribute = new CompareAttribute("CompareProperty");
-            AssertEx.DoesNotThrow(() => attribute.Validate(currentObject.CompareProperty, testContext));
+            attribute.Validate(currentObject.CompareProperty, testContext);
         }
 
-        [Fact]
-        public static void Validate_throws_when_compared_objects_are_not_equal()
+        [Theory]
+        [InlineData("CompareProperty")]
+        [InlineData("ComparePropertyWithDisplayName")]
+        [InlineData("UnknownPropertyName")]
+        public static void Validate_ComparedObjectsNotEqual_ThrowsValidationException(string otherProperty)
         {
             var currentObject = new CompareObject("a");
             var otherObject = new CompareObject("b");
@@ -40,62 +48,26 @@ namespace System.ComponentModel.DataAnnotations
             var testContext = new ValidationContext(otherObject, null, null);
             testContext.DisplayName = "CurrentProperty";
 
-            var attribute = new CompareAttribute("CompareProperty");
-            Assert.Throws<ValidationException>(
-                () => attribute.Validate(currentObject.CompareProperty, testContext));
+            var attribute = new CompareAttribute(otherProperty);
+            Assert.Throws<ValidationException>(() => attribute.Validate(currentObject.CompareProperty, testContext));
         }
 
         [Fact]
-        public static void Validate_throws_with_OtherProperty_DisplayName()
-        {
-            var currentObject = new CompareObject("a");
-            var otherObject = new CompareObject("b");
-
-            var testContext = new ValidationContext(otherObject, null, null);
-            testContext.DisplayName = "CurrentProperty";
-
-            var attribute = new CompareAttribute("ComparePropertyWithDisplayName");
-            Assert.Throws<ValidationException>(
-                () => attribute.Validate(currentObject.CompareProperty, testContext));
-        }
-
-        [Fact]
-        public static void Validate_throws_when_PropertyName_is_unknown()
-        {
-            var currentObject = new CompareObject("a");
-            var otherObject = new CompareObject("b");
-
-            var testContext = new ValidationContext(otherObject, null, null);
-            testContext.DisplayName = "CurrentProperty";
-
-            var attribute = new CompareAttribute("UnknownPropertyName");
-            Assert.Throws<ValidationException>(
-                () => attribute.Validate(currentObject.CompareProperty, testContext));
-            // cannot check error message - not defined on ret builds
-        }
-
-        [Fact]
-        public static void CompareAttribute_can_be_derived_from_and_override_is_valid()
+        public static void Validate_CustomDerivedClass_DoesNotThrow()
         {
             var otherObject = new CompareObject("a");
             var currentObject = new CompareObject("b");
             var testContext = new ValidationContext(otherObject, null, null);
 
             var attribute = new DerivedCompareAttribute("CompareProperty");
-            AssertEx.DoesNotThrow(() => attribute.Validate(currentObject.CompareProperty, testContext));
+            attribute.Validate(currentObject.CompareProperty, testContext);
         }
 
         private class DerivedCompareAttribute : CompareAttribute
         {
-            public DerivedCompareAttribute(string otherProperty)
-                : base(otherProperty)
-            {
-            }
+            public DerivedCompareAttribute(string otherProperty) : base(otherProperty) { }
 
-            protected override ValidationResult IsValid(object value, ValidationContext context)
-            {
-                return ValidationResult.Success;
-            }
+            protected override ValidationResult IsValid(object value, ValidationContext context) => ValidationResult.Success;
         }
 
         private class CompareObject
