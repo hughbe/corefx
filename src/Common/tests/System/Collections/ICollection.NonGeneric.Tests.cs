@@ -79,6 +79,12 @@ namespace System.Collections.Tests
         protected virtual bool ICollection_NonGeneric_SupportsSyncRoot => true;
 
         /// <summary>
+        /// Used for ICollection_NonGeneric_SyncRoot tests. Some implementations (e.g. CodeNamespaceImportCollection)
+        /// return null for the SyncRoot property of an ICollection.
+        /// </summary>
+        protected virtual bool ICollection_NonGeneric_HasNullSyncRoot => false;
+
+        /// <summary>
         /// Used for the ICollection_NonGeneric_SyncRootType_MatchesExcepted test. Most SyncRoots are created
         /// using System.Threading.Interlocked.CompareExchange(ref _syncRoot, new Object(), null)
         /// so we should test that the SyncRoot is the type we expect.
@@ -137,7 +143,7 @@ namespace System.Collections.Tests
         [MemberData(nameof(ValidCollectionSizes))]
         public void ICollection_NonGeneric_SyncRoot_NonNull(int count)
         {
-            if (ICollection_NonGeneric_SupportsSyncRoot)
+            if (ICollection_NonGeneric_SupportsSyncRoot && ! ICollection_NonGeneric_HasNullSyncRoot)
             {
                 ICollection collection = NonGenericICollectionFactory(count);
                 Assert.NotNull(collection.SyncRoot);
@@ -146,9 +152,20 @@ namespace System.Collections.Tests
 
         [Theory]
         [MemberData(nameof(ValidCollectionSizes))]
+        public void ICollection_NonGeneric_SyncRoot_Null(int count)
+        {
+            if (ICollection_NonGeneric_SupportsSyncRoot && ICollection_NonGeneric_HasNullSyncRoot)
+            {
+                ICollection collection = NonGenericICollectionFactory(count);
+                Assert.Null(collection.SyncRoot);
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(ValidCollectionSizes))]
         public void ICollection_NonGeneric_SyncRootConsistent(int count)
         {
-            if (ICollection_NonGeneric_SupportsSyncRoot)
+            if (ICollection_NonGeneric_SupportsSyncRoot && !ICollection_NonGeneric_HasNullSyncRoot)
             {
                 ICollection collection = NonGenericICollectionFactory(count);
                 object syncRoot1 = collection.SyncRoot;
@@ -161,7 +178,7 @@ namespace System.Collections.Tests
         [MemberData(nameof(ValidCollectionSizes))]
         public void ICollection_NonGeneric_SyncRootUnique(int count)
         {
-            if (ICollection_NonGeneric_SupportsSyncRoot)
+            if (ICollection_NonGeneric_SupportsSyncRoot && !ICollection_NonGeneric_HasNullSyncRoot)
             {
                 ICollection collection1 = NonGenericICollectionFactory(count);
                 ICollection collection2 = NonGenericICollectionFactory(count);
@@ -173,7 +190,7 @@ namespace System.Collections.Tests
         [MemberData(nameof(ValidCollectionSizes))]
         public void ICollection_NonGeneric_SyncRoot_MatchesExpectedType(int count)
         {
-            if (ICollection_NonGeneric_SupportsSyncRoot)
+            if (ICollection_NonGeneric_SupportsSyncRoot && !ICollection_NonGeneric_HasNullSyncRoot)
             {
                 ICollection collection = NonGenericICollectionFactory(count);
 
@@ -196,7 +213,7 @@ namespace System.Collections.Tests
         [MemberData(nameof(ValidCollectionSizes))]
         public void ICollection_NonGeneric_SyncRoot_ThrowsNotSupportedException(int count)
         {
-            if (!ICollection_NonGeneric_SupportsSyncRoot)
+            if (!ICollection_NonGeneric_SupportsSyncRoot && !ICollection_NonGeneric_HasNullSyncRoot)
             {
                 ICollection collection = NonGenericICollectionFactory(count);
                 Assert.Throws<NotSupportedException>(() => collection.SyncRoot);
