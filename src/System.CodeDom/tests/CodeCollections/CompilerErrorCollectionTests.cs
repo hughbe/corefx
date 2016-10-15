@@ -175,6 +175,70 @@ namespace System.CodeDom.Tests
 			Assert.Same(value2, collection[0]);
 		}
 
+		[Fact]
+		public void HasWarnings_Empty_ReturnsFalse()
+		{
+			var collection = new CompilerErrorCollection();
+			Assert.False(collection.HasWarnings);
+		}
+
+		[Fact]
+		public void HasWarnings_OnlyErrors_ReturnsFalse()
+		{
+			var collection = new CompilerErrorCollection();
+			collection.Add(new CompilerError() { IsWarning = false });
+			Assert.False(collection.HasWarnings);
+		}
+
+		[Fact]
+		public void HasWarnings_OnlyWarnings_ReturnsTrue()
+		{
+			var collection = new CompilerErrorCollection();
+			collection.Add(new CompilerError() { IsWarning = true });
+			Assert.True(collection.HasWarnings);
+		}
+
+		[Fact]
+		public void HasWarnings_WarningsAndErrors_ReturnsTrue()
+		{
+			var collection = new CompilerErrorCollection();
+			collection.Add(new CompilerError() { IsWarning = false });
+			collection.Add(new CompilerError() { IsWarning = true });
+			Assert.True(collection.HasWarnings);
+		}
+
+		[Fact]
+		public void HasErrors_Empty_ReturnsFalse()
+		{
+			var collection = new CompilerErrorCollection();
+			Assert.False(collection.HasErrors);
+		}
+
+		[Fact]
+		public void HasErrors_OnlyErrors_ReturnsTrue()
+		{
+			var collection = new CompilerErrorCollection();
+			collection.Add(new CompilerError() { IsWarning = false });
+			Assert.True(collection.HasErrors);
+		}
+
+		[Fact]
+		public void HasErrors_OnlyWarnings_ReturnsFalse()
+		{
+			var collection = new CompilerErrorCollection();
+			collection.Add(new CompilerError() { IsWarning = true });
+			Assert.False(collection.HasErrors);
+		}
+
+		[Fact]
+		public void HasErrors_WarningsAndErrors_ReturnsTrue()
+		{
+			var collection = new CompilerErrorCollection();
+			collection.Add(new CompilerError() { IsWarning = false });
+			collection.Add(new CompilerError() { IsWarning = true });
+			Assert.True(collection.HasErrors);
+		}
+
 		private static void VerifyCollection(CompilerErrorCollection collection, CompilerError[] contents)
 		{
 			Assert.Equal(contents.Length, collection.Count);

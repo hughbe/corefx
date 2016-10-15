@@ -112,7 +112,6 @@ namespace System.CodeDom.Compiler
                     _basePath = Path.Combine(
                         string.IsNullOrEmpty(TempDir) ? Path.GetTempPath() : TempDir,
                         Path.GetFileNameWithoutExtension(Path.GetRandomFileName()));
-                    string full = Path.GetFullPath(_basePath);
                     tempFileName = _basePath + ".tmp";
 
                     try
@@ -123,6 +122,10 @@ namespace System.CodeDom.Compiler
                     catch (IOException)
                     {
                         retryCount--;
+                        if (retryCount == 0)
+                        {
+                            throw;
+                        }
                         uniqueFile = false;
                     }
                 } while (!uniqueFile);
