@@ -628,7 +628,6 @@ public static partial class DataContractSerializerTests
     }
 
     [Fact]
-    [ActiveIssue("dotnet/corefx #20478", TargetFrameworkMonikers.UapAot)]
     public static void DCS_ListMembers()
     {
         TypeWithListMembers x = new TypeWithListMembers
@@ -812,8 +811,6 @@ public static partial class DataContractSerializerTests
     }
 
     [Fact]
-    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #19516")]
-    [ActiveIssue("dotnet/corefx #20476", TargetFrameworkMonikers.UapAot)]
     public static void DCS_TypeWithPrivateFieldAndPrivateGetPublicSetProperty()
     {
         TypeWithPrivateFieldAndPrivateGetPublicSetProperty x = new TypeWithPrivateFieldAndPrivateGetPublicSetProperty
@@ -821,8 +818,8 @@ public static partial class DataContractSerializerTests
             Name = "foo",
         };
 
-        TypeWithPrivateFieldAndPrivateGetPublicSetProperty y = SerializeAndDeserialize<TypeWithPrivateFieldAndPrivateGetPublicSetProperty>(x, @"<TypeWithPrivateFieldAndPrivateGetPublicSetProperty xmlns=""http://schemas.datacontract.org/2004/07/"" xmlns:i=""http://www.w3.org/2001/XMLSchema-instance""><Name>foo</Name></TypeWithPrivateFieldAndPrivateGetPublicSetProperty>");
-        Assert.Equal(x.GetName(), y.GetName());
+        TypeWithPrivateFieldAndPrivateGetPublicSetProperty y = SerializeAndDeserialize<TypeWithPrivateFieldAndPrivateGetPublicSetProperty>(x, @"<TypeWithPrivateFieldAndPrivateGetPublicSetProperty xmlns=""http://schemas.datacontract.org/2004/07/"" xmlns:i=""http://www.w3.org/2001/XMLSchema-instance""></TypeWithPrivateFieldAndPrivateGetPublicSetProperty>");
+        Assert.Null(y.GetName());
     }
 
     [Fact]
@@ -1601,7 +1598,6 @@ public static partial class DataContractSerializerTests
     }
 
     [Fact]
-    [ActiveIssue("dotnet/corefx #20478", TargetFrameworkMonikers.UapAot)]
     public static void DCS_GenericQueue()
     {
         Queue<int> value = new Queue<int>();
@@ -1615,7 +1611,6 @@ public static partial class DataContractSerializerTests
     }
 
     [Fact]
-    [ActiveIssue("dotnet/corefx #20478", TargetFrameworkMonikers.UapAot)]
     public static void DCS_GenericStack()
     {
         var value = new Stack<int>();
@@ -1631,7 +1626,6 @@ public static partial class DataContractSerializerTests
     }
 
     [Fact]
-    [ActiveIssue("dotnet/corefx #20478", TargetFrameworkMonikers.UapAot)]
     public static void DCS_Queue()
     {
         var value = new Queue();
@@ -1646,7 +1640,6 @@ public static partial class DataContractSerializerTests
     }
 
     [Fact]
-    [ActiveIssue("dotnet/corefx #20478", TargetFrameworkMonikers.UapAot)]
     public static void DCS_Stack()
     {
         var value = new Stack();
@@ -1662,7 +1655,6 @@ public static partial class DataContractSerializerTests
     }
 
     [Fact]
-    [ActiveIssue("dotnet/corefx #20478", TargetFrameworkMonikers.UapAot)]
     public static void DCS_SortedList()
     {
         var value = new SortedList();
@@ -1675,7 +1667,6 @@ public static partial class DataContractSerializerTests
     }
 
     [Fact]
-    [ActiveIssue("dotnet/corefx #20478", TargetFrameworkMonikers.UapAot)]
     public static void DCS_SystemVersion()
     {
         Version value = new Version(1, 2, 3, 4);
@@ -1881,7 +1872,6 @@ public static partial class DataContractSerializerTests
     }
 
     [Fact]
-    [ActiveIssue("dotnet/corefx #20478", TargetFrameworkMonikers.UapAot)]
     public static void DCS_ReadOnlyCollection()
     {
         List<string> list = new List<string>() { "Foo", "Bar" };
@@ -1893,7 +1883,6 @@ public static partial class DataContractSerializerTests
     }
 
     [Fact]
-    [ActiveIssue("dotnet/corefx #20478", TargetFrameworkMonikers.UapAot)]
     public static void DCS_ReadOnlyDictionary()
     {
         var dict = new Dictionary<string, int>();
@@ -3052,7 +3041,6 @@ public static partial class DataContractSerializerTests
     }
 
     [Fact]
-    [ActiveIssue("dotnet/corefx #20478", TargetFrameworkMonikers.UapAot)]
     public static void DCS_BasicRoundtripDCRDefaultCollections()
     {
         var defaultCollections = new SerializationTestTypes.DefaultCollections();

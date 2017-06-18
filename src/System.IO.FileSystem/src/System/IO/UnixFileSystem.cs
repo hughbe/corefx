@@ -15,15 +15,6 @@ namespace System.IO
     {
         internal const int DefaultBufferSize = 4096;
 
-        public override int MaxPath { get { return Interop.Sys.MaxPath; } }
-
-        public override int MaxDirectoryPath { get { return Interop.Sys.MaxPath; } }
-
-        public override FileStream Open(string fullPath, FileMode mode, FileAccess access, FileShare share, int bufferSize, FileOptions options, FileStream parent)
-        {
-            return new FileStream(fullPath, mode, access, share, bufferSize, options);
-        }
-
         public override void CopyFile(string sourceFullPath, string destFullPath, bool overwrite)
         {
             // The destination path may just be a directory into which the file should be copied.
@@ -238,7 +229,7 @@ namespace System.IO
             while (stackDir.Count > 0)
             {
                 string name = stackDir.Pop();
-                if (name.Length >= MaxDirectoryPath)
+                if (name.Length >= Interop.Sys.MaxPath)
                 {
                     throw new PathTooLongException(SR.IO_PathTooLong);
                 }
@@ -517,6 +508,21 @@ namespace System.IO
                         }
                         searchPattern = searchPattern.Substring(lastSlash + 1);
                     }
+
+                    // Typically we shouldn't see either of these cases, an upfront check is much faster
+                    foreach (char c in searchPattern)
+                    {
+                        if (c == '\\' || c == '[')
+                        {
+                            // We need to escape any escape characters in the search pattern
+                            searchPattern = searchPattern.Replace(@"\", @"\\");
+
+                            // And then escape '[' to prevent it being picked up as a wildcard
+                            searchPattern = searchPattern.Replace(@"[", @"\[");
+                            break;
+                        }
+                    }
+
                     string fullPath = Path.GetFullPath(userPath);
 
                     // Store everything for the enumerator
@@ -651,6 +657,7 @@ namespace System.IO
                 {
                     searchPattern += "*";
                 }
+
                 return searchPattern;
             }
 

@@ -23,7 +23,6 @@ namespace System.Tests
 
         [Theory]
         [MemberData(nameof(ExitCodeValues))]
-        [ActiveIssue("https://github.com/dotnet/corefx/issues/19909 - RemoteInvoke returns a null Process on UapAot.", TargetFrameworkMonikers.UapAot)]
         public static void CheckExitCode(int expectedExitCode)
         {
             using (Process p = RemoteInvoke(s => int.Parse(s), expectedExitCode.ToString()).Process)
@@ -61,7 +60,7 @@ namespace System.Tests
 
             const string AppName = "VoidMainWithExitCodeApp.exe";
             var psi = new ProcessStartInfo();
-            if (IsFullFramework || IsNetNative)
+            if (PlatformDetection.IsFullFramework || PlatformDetection.IsNetNative)
             {
                 psi.FileName = AppName;
                 psi.Arguments = $"{expectedExitCode} {mode}";
