@@ -183,6 +183,7 @@ namespace System.Tests
         [Trait(XunitConstants.Category, XunitConstants.IgnoreForCI)] // fail fast crashes the process
         [OuterLoop]
         [Fact]
+        [ActiveIssue("https://github.com/dotnet/corefx/issues/21404", TargetFrameworkMonikers.Uap)]
         public void FailFast_ExpectFailureExitCode()
         {
             using (Process p = RemoteInvoke(() => { Environment.FailFast("message"); return SuccessExitCode; }).Process)
@@ -315,6 +316,7 @@ namespace System.Tests
         [InlineData(Environment.SpecialFolder.SystemX86)]
         [InlineData(Environment.SpecialFolder.Windows)]
         [PlatformSpecific(TestPlatforms.Windows)]  // Tests OS-specific environment
+        [ActiveIssue("https://github.com/dotnet/corefx/issues/18048", TargetFrameworkMonikers.Uap)]
         public unsafe void GetFolderPath_Windows(Environment.SpecialFolder folder)
         {
             string knownFolder = Environment.GetFolderPath(folder);
@@ -375,35 +377,9 @@ namespace System.Tests
             get
             {
                 yield return new object[] { EnvironmentVariableTarget.Process };
-                if (!(s_EnvironmentRegKeysStillAccessDenied.Value))
-                {
-                    yield return new object[] { EnvironmentVariableTarget.User };
-                    yield return new object[] { EnvironmentVariableTarget.Machine };
-                }
+                yield return new object[] { EnvironmentVariableTarget.User };
+                yield return new object[] { EnvironmentVariableTarget.Machine };
             }
         }
-
-        private static readonly Lazy<bool> s_EnvironmentRegKeysStillAccessDenied = new Lazy<bool>(
-            delegate ()
-            {
-                if (!PlatformDetection.IsWindows)
-                    return false;  // On Unix, registry-based environment api's won't throw a SecurityException - they just eat all writes.
-                if (!PlatformDetection.IsWinRT)
-                    return false;  // On non-appcontainer apps, these won't throw (except writes to Target.Machine on non-elevated but that's accounted for separately.)
-
-                try
-                {
-                    Environment.GetEnvironmentVariables(EnvironmentVariableTarget.User);
-                }
-                catch (SecurityException)
-                {
-                    return true; // AppX registry exemptions not yet granted (at least on this build.)
-                }
-                catch
-                {
-                    return false; // Hmm... some other exception. We'll enable the individual tests and let them report it...
-                }
-                return false;
-            });
     }
 }

@@ -81,7 +81,6 @@ namespace System.Net.Sockets.Tests
         [Theory]
         [InlineData(SocketImplementationType.APM)]
         [InlineData(SocketImplementationType.Async)]
-        [ActiveIssue(20135, TargetFrameworkMonikers.Uap)]
         public void NullArgs_Throw(SocketImplementationType type)
         {
             int port;
@@ -90,12 +89,8 @@ namespace System.Net.Sockets.Tests
                 using (Socket sock = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp))
                 {
                     sock.Connect(new IPEndPoint(_serverAddress, port));
-
-                    ArgumentNullException ex = Assert.Throws<ArgumentNullException>(() =>
-                    {
-                        sock.SendPacketsAsync(null);
-                    });
-                    Assert.Equal("e", ex.ParamName);
+                    
+                    AssertExtensions.Throws<ArgumentNullException>("e", () => sock.SendPacketsAsync(null));
                 }
             }
         }
@@ -117,22 +112,16 @@ namespace System.Net.Sockets.Tests
         [Theory]
         [InlineData(SocketImplementationType.APM)]
         [InlineData(SocketImplementationType.Async)]
-        [ActiveIssue(20135, TargetFrameworkMonikers.Uap)]
         public void NullList_Throws(SocketImplementationType type)
         {
-            ArgumentNullException ex = Assert.Throws<ArgumentNullException>(() =>
-            {
-                SendPackets(type, (SendPacketsElement[])null, SocketError.Success, 0);
-            });
-
-            Assert.Equal("e.SendPacketsElements", ex.ParamName);
+            AssertExtensions.Throws<ArgumentNullException>("e.SendPacketsElements", () => SendPackets(type, (SendPacketsElement[])null, SocketError.Success, 0));
         }
 
         [OuterLoop] // TODO: Issue #11345
         [Theory]
         [InlineData(SocketImplementationType.APM)]
         [InlineData(SocketImplementationType.Async)]
-        [ActiveIssue(20135, TargetFrameworkMonikers.Uap)]
+        [ActiveIssue(21158, TargetFrameworkMonikers.Uap)]
         public void NullElement_Ignored(SocketImplementationType type)
         {
             SendPackets(type, (SendPacketsElement)null, 0);
@@ -142,7 +131,7 @@ namespace System.Net.Sockets.Tests
         [Theory]
         [InlineData(SocketImplementationType.APM)]
         [InlineData(SocketImplementationType.Async)]
-        [ActiveIssue(20135, TargetFrameworkMonikers.Uap)]
+        [ActiveIssue(21158, TargetFrameworkMonikers.Uap)]
         public void EmptyList_Ignored(SocketImplementationType type)
         {
             SendPackets(type, new SendPacketsElement[0], SocketError.Success, 0);
@@ -179,7 +168,7 @@ namespace System.Net.Sockets.Tests
         [Theory]
         [InlineData(SocketImplementationType.APM)]
         [InlineData(SocketImplementationType.Async)]
-        [ActiveIssue(20135, TargetFrameworkMonikers.Uap)]
+        [ActiveIssue(21158, TargetFrameworkMonikers.Uap)]
         public void EmptyBuffer_Ignored(SocketImplementationType type)
         {
             SendPackets(type, new SendPacketsElement(new byte[0]), 0);
@@ -188,7 +177,7 @@ namespace System.Net.Sockets.Tests
         [Theory]
         [InlineData(SocketImplementationType.APM)]
         [InlineData(SocketImplementationType.Async)]
-        [ActiveIssue(20135, TargetFrameworkMonikers.Uap)]
+        [ActiveIssue(21158, TargetFrameworkMonikers.Uap)]
         public void BufferZeroCount_Ignored(SocketImplementationType type)
         {
             SendPackets(type, new SendPacketsElement(new byte[10], 4, 0), 0);
@@ -211,7 +200,7 @@ namespace System.Net.Sockets.Tests
         [Theory]
         [InlineData(SocketImplementationType.APM)]
         [InlineData(SocketImplementationType.Async)]
-        [ActiveIssue(20135, TargetFrameworkMonikers.Uap)]
+        [ActiveIssue(21158, TargetFrameworkMonikers.Uap)]
         public void BufferZeroCountThenNormal_ZeroCountIgnored(SocketImplementationType type)
         {
             Assert.True(Capability.IPv6Support());
@@ -287,7 +276,7 @@ namespace System.Net.Sockets.Tests
         [InlineData(SocketImplementationType.Async)]
         public void SendPacketsElement_EmptyFileName_Throws(SocketImplementationType type)
         {
-            Assert.Throws<ArgumentException>(() =>
+            AssertExtensions.Throws<ArgumentException>("path", null, () =>
             {
                 SendPackets(type, new SendPacketsElement(String.Empty), 0);
             });
@@ -299,7 +288,7 @@ namespace System.Net.Sockets.Tests
         [PlatformSpecific(TestPlatforms.Windows)] // whitespace-only is a valid name on Unix
         public void SendPacketsElement_BlankFileName_Throws(SocketImplementationType type)
         {
-            Assert.Throws<ArgumentException>(() =>
+            AssertExtensions.Throws<ArgumentException>("path", null, () =>
             {
                 // Existence is validated on send
                 SendPackets(type, new SendPacketsElement(" \t  "), 0);
@@ -312,7 +301,7 @@ namespace System.Net.Sockets.Tests
         [PlatformSpecific(TestPlatforms.Windows)] // valid filename chars on Unix
         public void SendPacketsElement_BadCharactersFileName_Throws(SocketImplementationType type)
         {
-            Assert.Throws<ArgumentException>(() =>
+            AssertExtensions.Throws<ArgumentException>("path", null, () =>
             {
                 // Existence is validated on send
                 SendPackets(type, new SendPacketsElement("blarkd@dfa?/sqersf"), 0);
