@@ -56,7 +56,29 @@ namespace System.Drawing.Tests
             Pen pen = penThunk();
             Assert.Equal(expectedColor, pen.Color);
             Assert.Equal(PenType.SolidColor, pen.PenType);
+
+            Assert.Throws<ArgumentException>(null, () => pen.Dispose());
+            Assert.Throws<ArgumentException>(null, () => pen.SetLineCap(LineCap.ArrowAnchor, LineCap.Custom, DashCap.Round));
+
+            Assert.Throws<ArgumentException>(null, () => pen.Alignment = PenAlignment.Center);
+            Assert.Throws<ArgumentException>(null, () => pen.Brush = null);
             Assert.Throws<ArgumentException>(null, () => pen.Color = Color.AliceBlue);
+            Assert.Throws<ArgumentException>(null, () => pen.CompoundArray = null);
+            Assert.Throws<ArgumentException>(null, () => pen.CustomEndCap = null);
+            Assert.Throws<ArgumentException>(null, () => pen.CustomStartCap = null);
+            Assert.Throws<ArgumentException>(null, () => pen.DashCap = DashCap.Flat);
+            Assert.Throws<ArgumentException>(null, () => pen.DashStyle = DashStyle.Custom);
+            Assert.Throws<ArgumentException>(null, () => pen.DashOffset = 10);
+            Assert.Throws<ArgumentException>(null, () => pen.DashPattern = null);
+            Assert.Throws<ArgumentException>(null, () => pen.EndCap = LineCap.RoundAnchor);
+            Assert.Throws<ArgumentException>(null, () => pen.LineJoin = LineJoin.MiterClipped);
+            Assert.Throws<ArgumentException>(null, () => pen.MiterLimit = 10);
+            Assert.Throws<ArgumentException>(null, () => pen.StartCap = LineCap.RoundAnchor);
+            using (var matrix = new Matrix())
+            {
+                Assert.Throws<ArgumentException>(null, () => pen.Transform = matrix);
+            }
+            Assert.Throws<ArgumentException>(null, () => pen.Width = 10);
 
             Assert.Same(pen, penThunk());
         }
