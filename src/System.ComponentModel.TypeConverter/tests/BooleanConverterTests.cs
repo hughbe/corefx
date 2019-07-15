@@ -21,6 +21,7 @@ namespace System.ComponentModel.Tests
         public override IEnumerable<ConvertTest> ConvertToTestData()
         {
             yield return ConvertTest.Valid(true, Boolean.TrueString);
+            yield return ConvertTest.Valid(false, Boolean.FalseString);
             yield return ConvertTest.Valid(1, "1");
 
             yield return ConvertTest.CantConvertTo(true, typeof(bool));
@@ -32,10 +33,13 @@ namespace System.ComponentModel.Tests
         {
             yield return ConvertTest.Valid("false  ", false);
             yield return ConvertTest.Valid("true", true, CultureInfo.InvariantCulture);
+            yield return ConvertTest.Valid(" \r\n\t true \r\n\t ", true, CultureInfo.InvariantCulture);
+            yield return ConvertTest.Valid(" \r\n\t false \r\n\t ", false, CultureInfo.InvariantCulture);
 
             yield return ConvertTest.Throws<FormatException>("1");
 
             yield return ConvertTest.CantConvertFrom(1);
+            yield return ConvertTest.CantConvertFrom(new object());
             yield return ConvertTest.CantConvertFrom(null);
         }
 
