@@ -51,7 +51,7 @@ namespace System.Drawing
 
                 if (values.Length != 2)
                 {
-                    throw new ArgumentException(SR.Format(SR.TextParseFailedFormat, text, "Width,Height"));
+                    throw new ArgumentException(SR.Format(SR.TextParseFailedFormat, text, "Width,Height"), nameof(value));
                 }
                 
                 return new SizeF(values[0], values[1]);
@@ -112,7 +112,7 @@ namespace System.Drawing
 
             if (width == null || height == null || !(width is float) || !(height is float))
             {
-                throw new ArgumentException(SR.PropertyValueInvalidEntry);
+                throw new ArgumentException(SR.PropertyValueInvalidEntry, nameof(propertyValues));
             }
 
             return new SizeF((float)width, (float)height);

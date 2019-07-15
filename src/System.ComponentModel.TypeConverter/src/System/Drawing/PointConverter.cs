@@ -56,7 +56,7 @@ namespace System.Drawing
                 }
                 else
                 {
-                    throw new ArgumentException(SR.Format(SR.TextParseFailedFormat, text, "x, y"));
+                    throw new ArgumentException(SR.Format(SR.TextParseFailedFormat, text, "x, y"), nameof(value));
                 }
             }
 
@@ -117,7 +117,7 @@ namespace System.Drawing
 
             if (x == null || y == null || !(x is int) || !(y is int))
             {
-                throw new ArgumentException(SR.PropertyValueInvalidEntry);
+                throw new ArgumentException(SR.PropertyValueInvalidEntry, nameof(propertyValues));
             }
 
             return new Point((int)x, (int)y);

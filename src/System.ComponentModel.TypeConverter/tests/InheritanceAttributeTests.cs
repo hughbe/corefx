@@ -110,7 +110,7 @@ namespace System.ComponentModel.Tests
         public void ToString_InvalidInheritanceLevel_ThrowsArgumentException(InheritanceLevel inheritanceLevel)
         {
             var attribute = new InheritanceAttribute(inheritanceLevel);
-            AssertExtensions.Throws<ArgumentException>(null, () => attribute.ToString());
+            AssertExtensions.Throws<ArgumentException>("value", () => attribute.ToString());
         }
     }
 }

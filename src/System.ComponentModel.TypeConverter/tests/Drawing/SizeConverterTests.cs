@@ -160,7 +160,7 @@ namespace System.ComponentModel.TypeConverterTests
         [Fact]
         public void CreateInstance_CaseSensitive()
         {
-            AssertExtensions.Throws<ArgumentException>(null, () =>
+            AssertExtensions.Throws<ArgumentException>("propertyValues", () =>
             {
                 Converter.CreateInstance(null, new Dictionary<string, object>
                 {

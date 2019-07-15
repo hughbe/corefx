@@ -239,8 +239,9 @@ namespace System.ComponentModel
             {
                 if (s_contextLockHolder != contextUser)
                 {
-                    throw new ArgumentException(SR.LicMgrDifferentUser);
+                    throw new ArgumentException(SR.LicMgrDifferentUser, nameof(contextUser));
                 }
+
                 s_contextLockHolder = null;
             }
         }

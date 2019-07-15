@@ -30,241 +30,264 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using Xunit;
-using System.Reflection;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using Xunit;
 
 namespace System.ComponentModel.Design.Serialization.Tests
 {
-    public class InstanceDescriptorTest
+    public class InstanceDescriptorTests
     {
         private const string Url = "http://www.mono-project.com/";
 
-        [Fact]
-        public void Ctor_ConstructorInfo_ICollection()
+        public static IEnumerable<object[]> Ctor_MemberInfo_ICollection_TestData()
         {
-            ConstructorInfo ci = typeof(Uri).GetConstructor(new Type[] { typeof(string) });
+            // ConstructorInfo.
+            yield return new object[] { typeof(EditorAttribute).GetConstructor(new Type[0]), null };
+            yield return new object[] { typeof(EditorAttribute).GetConstructor(new Type[0]), new object[0] };
+            yield return new object[] { typeof(Uri).GetConstructor(new Type[] { typeof(string) }), new object[] { Url } };
+            yield return new object[] { typeof(Uri).GetConstructor(new Type[] { typeof(string) }), new object[] { 1 } };
 
-            InstanceDescriptor id = new InstanceDescriptor(ci, new object[] { Url });
-            Assert.Equal(1, id.Arguments.Count);
-            Assert.True(id.IsComplete);
-            Assert.Same(ci, id.MemberInfo);
-            Uri uri = (Uri)id.Invoke();
-            Assert.Equal(Url, uri.AbsoluteUri);
+            // FieldInfo.
+            yield return new object[] { typeof(DataClass).GetField(nameof(DataClass.Field)), null };
+            yield return new object[] { typeof(DataClass).GetField(nameof(DataClass.Field)), new object[0] };
+
+            // PropertyInfo.
+            yield return new object[] { typeof(DataClass).GetProperty(nameof(DataClass.Property)), null };
+            yield return new object[] { typeof(DataClass).GetProperty(nameof(DataClass.Property)), new object[0] };
+            yield return new object[] { typeof(DataClass).GetProperty(nameof(DataClass.Property)), new object[] { new object() } };
+
+            // MethodInfo.
+            yield return new object[] { typeof(DataClass).GetMethod(nameof(DataClass.ParameterlessMethod)), null };
+            yield return new object[] { typeof(DataClass).GetMethod(nameof(DataClass.ParameterlessMethod)), new object[0] };
+            yield return new object[] { typeof(DataClass).GetMethod(nameof(DataClass.IntMethod)), new object[] { 1 } };
+            yield return new object[] { typeof(DataClass).GetMethod(nameof(DataClass.IntMethod)), new object[] { new object() } };
+
+            MethodInfo argumentMethod = typeof(DataClass).GetMethod(nameof(DataClass.IntReturningMethod));
+            var argumentInstanceDescriptor = new InstanceDescriptor(argumentMethod, null);
+            yield return new object[] { typeof(DataClass).GetMethod(nameof(DataClass.IntMethod)), new object[] { argumentInstanceDescriptor } };
+
+            // EventInfo.
+            yield return new object[] { typeof(DataClass).GetEvent(nameof(DataClass.Event)), null };
+            yield return new object[] { typeof(DataClass).GetEvent(nameof(DataClass.Event)), new object[0] };
+            yield return new object[] { typeof(DataClass).GetEvent(nameof(DataClass.Event)), new object[] { new object() } };
+
+            // MemberInfo.
+            yield return new object[] { null, null };
+            yield return new object[] { null, new object[0] };
+            yield return new object[] { null, new object[] { new object() } };
         }
 
-        [Fact]
-        public void Constructor_ConstructorInfo_ICollection_Boolean()
+        [Theory]
+        [MemberData(nameof(Ctor_MemberInfo_ICollection_TestData))]
+        public void Ctor_ConstructorInfo_ICollection(MemberInfo member, object[] arguments)
         {
-            ConstructorInfo ci = typeof(Uri).GetConstructor(new Type[] { typeof(string) });
+            InstanceDescriptor instanceDescriptor = new InstanceDescriptor(member, arguments);
+            Assert.NotSame(arguments, instanceDescriptor.Arguments);
+            Assert.Equal(arguments ?? Array.Empty<object[]>(), instanceDescriptor.Arguments);
+            Assert.True(instanceDescriptor.IsComplete);
+            Assert.Same(member, instanceDescriptor.MemberInfo);
+        }
 
-            InstanceDescriptor id = new InstanceDescriptor(ci, new object[] { Url }, false);
-            Assert.Equal(1, id.Arguments.Count);
-            Assert.False(id.IsComplete);
-            Assert.Same(ci, id.MemberInfo);
-            Uri uri = (Uri)id.Invoke();
-            Assert.Equal(Url, uri.AbsoluteUri);
+        public static IEnumerable<object[]> Ctor_MemberInfo_ICollection_Bool_TestData()
+        {
+            foreach (bool isComplete in new bool[] { true, false })
+            {
+                // ConstructorInfo.
+                yield return new object[] { typeof(int).GetConstructor(new Type[0]), null, isComplete };
+                yield return new object[] { typeof(int).GetConstructor(new Type[0]), new object[0], isComplete };
+                yield return new object[] { typeof(Uri).GetConstructor(new Type[] { typeof(string) }), new object[] { Url }, isComplete };
+                yield return new object[] { typeof(Uri).GetConstructor(new Type[] { typeof(string) }), new object[] { 1 }, isComplete };
+
+                // FieldInfo.
+                yield return new object[] { typeof(DataClass).GetField(nameof(DataClass.Field)), null, isComplete };
+                yield return new object[] { typeof(DataClass).GetField(nameof(DataClass.Field)), new object[0], isComplete };
+
+                // PropertyInfo.
+                yield return new object[] { typeof(DataClass).GetProperty(nameof(DataClass.Property)), null, isComplete };
+                yield return new object[] { typeof(DataClass).GetProperty(nameof(DataClass.Property)), new object[0], isComplete };
+                yield return new object[] { typeof(DataClass).GetProperty(nameof(DataClass.Property)), new object[] { new object() }, isComplete };
+
+                // MethodInfo.
+                yield return new object[] { typeof(DataClass).GetMethod(nameof(DataClass.ParameterlessMethod)), null, isComplete };
+                yield return new object[] { typeof(DataClass).GetMethod(nameof(DataClass.ParameterlessMethod)), new object[0], isComplete };
+                yield return new object[] { typeof(DataClass).GetMethod(nameof(DataClass.IntMethod)), new object[] { 1 }, isComplete };
+                yield return new object[] { typeof(DataClass).GetMethod(nameof(DataClass.IntMethod)), new object[] { new object() }, isComplete };
+
+                MethodInfo argumentMethod = typeof(DataClass).GetMethod(nameof(DataClass.IntReturningMethod));
+                var argumentInstanceDescriptor = new InstanceDescriptor(argumentMethod, null);
+                yield return new object[] { typeof(DataClass).GetMethod(nameof(DataClass.IntMethod)), new object[] { argumentInstanceDescriptor }, isComplete };
+
+                // EventInfo.
+                yield return new object[] { typeof(DataClass).GetEvent(nameof(DataClass.Event)), null, isComplete };
+                yield return new object[] { typeof(DataClass).GetEvent(nameof(DataClass.Event)), new object[0], isComplete };
+                yield return new object[] { typeof(DataClass).GetEvent(nameof(DataClass.Event)), new object[] { new object() }, isComplete };
+
+                // MemberInfo.
+                yield return new object[] { null, null, isComplete };
+                yield return new object[] { null, new object[0], isComplete };
+                yield return new object[] { null, new object[] { new object() }, isComplete };
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(Ctor_MemberInfo_ICollection_Bool_TestData))]
+        public void Ctor_MemberInfo_ICollection_Boolean(MemberInfo member, object[] arguments, bool isComplete)
+        {
+            InstanceDescriptor instanceDescriptor = new InstanceDescriptor(member, arguments, isComplete);
+            Assert.NotSame(arguments, instanceDescriptor.Arguments);
+            Assert.Equal(arguments ?? Array.Empty<object>(), instanceDescriptor.Arguments);
+            Assert.Equal(isComplete, instanceDescriptor.IsComplete);
+            Assert.Same(member, instanceDescriptor.MemberInfo);
         }
 
         [Theory]
         [InlineData(null)]
         [InlineData(new object[] { new object[] { } })]
+        [InlineData(new object[] { new object[] { "s", 1 } })]
         public void Ctor_ConstructorInfoArgumentMismatch_ThrowsArgumentException(object[] arguments)
         {
-            ConstructorInfo ci = typeof(Uri).GetConstructor(new Type[] { typeof(string) });
-            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(ci, arguments));
-            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(ci, arguments, false));
+            ConstructorInfo member = typeof(Uri).GetConstructor(new Type[] { typeof(string) });
+            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(member, arguments));
+            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(member, arguments, isComplete: true));
+            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(member, arguments, isComplete: false));
         }
+
         [Fact]
-        public void Ctor_StaticConstructor_ThrowsArgumentException()
+        public void Ctor_ConstructorInfoStatic_ThrowsArgumentException()
         {
-            ConstructorInfo constructor = typeof(StaticConstructor).GetConstructors(BindingFlags.Static | BindingFlags.NonPublic).Single();
-            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(constructor, null));
-        }
-
-        [Theory]
-        [InlineData(null)]
-        [InlineData(new object[] { new object[] { } })]
-        public void Ctor_FieldInfo_ICollection(object[] arguments)
-        {
-            FieldInfo fi = typeof(StaticField).GetField(nameof(StaticField.Field));
-
-            InstanceDescriptor id = new InstanceDescriptor(fi, arguments);
-            Assert.Equal(0, id.Arguments.Count);
-            Assert.True(id.IsComplete);
-            Assert.Same(fi, id.MemberInfo);
-            Assert.NotNull(id.Invoke());
+            ConstructorInfo constructor = typeof(DataClass).GetConstructors(BindingFlags.Static | BindingFlags.NonPublic).Single();
+            AssertExtensions.Throws<ArgumentException>("member", () => new InstanceDescriptor(constructor, null));
         }
 
         [Fact]
         public void Ctor_FieldInfoArgumentMismatch_ThrowsArgumentException()
         {
-            FieldInfo fi = typeof(StaticField).GetField(nameof(StaticField.Field));
-            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(fi, new object[] { Url }));
+            FieldInfo member = typeof(DataClass).GetField(nameof(DataClass.Field));
+            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(member, new object[] { Url }));
+            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(member, new object[] { Url }, isComplete: true));
+            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(member, new object[] { Url }, isComplete: false));
         }
 
         [Fact]
-        public void Ctor_NonStaticFieldInfo_ThrowsArgumentException()
+        public void Ctor_FieldInfoNonStatic_ThrowsArgumentException()
         {
-            FieldInfo fi = typeof(InstanceField).GetField(nameof(InstanceField.Name));
-            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(fi, null));
-            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(fi, null, false));
+            FieldInfo member = typeof(DataClass).GetField(nameof(DataClass.NonStaticField));
+            AssertExtensions.Throws<ArgumentException>("member", () => new InstanceDescriptor(member, null));
+            AssertExtensions.Throws<ArgumentException>("member", () => new InstanceDescriptor(member, null, isComplete: true));
+            AssertExtensions.Throws<ArgumentException>("member", () => new InstanceDescriptor(member, null, isComplete: false));
+        }
+
+        [Fact]
+        public void Ctor_PropertyInfoNonStatic_ThrowsArgumentException()
+        {
+            PropertyInfo pi = typeof(DataClass).GetProperty(nameof(DataClass.NonStaticProperty));
+            AssertExtensions.Throws<ArgumentException>("member", () => new InstanceDescriptor(pi, null));
+            AssertExtensions.Throws<ArgumentException>("member", () => new InstanceDescriptor(pi, null, isComplete: true));
+            AssertExtensions.Throws<ArgumentException>("member", () => new InstanceDescriptor(pi, null, isComplete: false));
+        }
+
+        [Fact]
+        public void Ctor_PropertyInfoWriteOnly_ThrowsArgumentException()
+        {
+            PropertyInfo pi = typeof(DataClass).GetProperty(nameof(DataClass.WriteOnlyProperty));
+            AssertExtensions.Throws<ArgumentException>("member", () => new InstanceDescriptor(pi, null));
+            AssertExtensions.Throws<ArgumentException>("member", () => new InstanceDescriptor(pi, null, isComplete: true));
+            AssertExtensions.Throws<ArgumentException>("member", () => new InstanceDescriptor(pi, null, isComplete: false));
+        }
+
+        [Fact]
+        public void Ctor_MethodInfoNonStatic_ThrowsArgumentException()
+        {
+            MethodInfo method = typeof(DataClass).GetMethod(nameof(DataClass.NonStaticMethod));
+            AssertExtensions.Throws<ArgumentException>("member", () => new InstanceDescriptor(method, new object[] { 1 }));
+            AssertExtensions.Throws<ArgumentException>("member", () => new InstanceDescriptor(method, new object[] { 1 }, isComplete: true));
+            AssertExtensions.Throws<ArgumentException>("member", () => new InstanceDescriptor(method, new object[] { 1 }, isComplete: false));
         }
 
         [Theory]
         [InlineData(null)]
         [InlineData(new object[] { new object[] { } })]
-        public void Ctor_PropertyInfo_ICollection(object[] arguments)
+        [InlineData(new object[] { new object[] { "s", 1 } })]
+        public void Ctor_MethodInfoArgumentMismatch_ThrowsArgumentException(object[] arguments)
         {
-            PropertyInfo pi = typeof(StaticProperty).GetProperty(nameof(StaticProperty.Property));
+            MethodInfo method = typeof(DataClass).GetMethod(nameof(DataClass.IntMethod));
+            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(method, arguments));
+            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(method, arguments, isComplete: true));
+            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(method, arguments, isComplete: false));
+        }
 
-            InstanceDescriptor id = new InstanceDescriptor(pi, arguments);
-            Assert.Equal(0, id.Arguments.Count);
-            Assert.True(id.IsComplete);
-            Assert.Same(pi, id.MemberInfo);
-            Assert.NotNull(id.Invoke());
+        public static IEnumerable<object[]> Invoke_TestData()
+        {
+            // ConstructorInfo.
+            yield return new object[] { typeof(EditorAttribute).GetConstructor(new Type[0]), new object[0], new EditorAttribute() };
+            yield return new object[] { typeof(Uri).GetConstructor(new Type[] { typeof(string) }), new object[] { Url }, new Uri(Url) };
+
+            // FieldInfo.
+            yield return new object[] { typeof(DataClass).GetField(nameof(DataClass.Field)), new object[0], "Field" };
+
+            // PropertyInfo.
+            yield return new object[] { typeof(DataClass).GetProperty(nameof(DataClass.Property)), new object[0], "Property" };
+
+            // MethodInfo.
+            yield return new object[] { typeof(DataClass).GetMethod(nameof(DataClass.ParameterlessMethod)), new object[0], "ParameterlessMethod" };
+            yield return new object[] { typeof(DataClass).GetMethod(nameof(DataClass.IntMethod)), new object[] { 1 }, "1" };
+
+            MethodInfo argumentMethod = typeof(DataClass).GetMethod(nameof(DataClass.IntReturningMethod));
+            var argumentInstanceDescriptor = new InstanceDescriptor(argumentMethod, null);
+            yield return new object[] { typeof(DataClass).GetMethod(nameof(DataClass.IntMethod)), new object[] { argumentInstanceDescriptor }, "1" };
+
+            // EventInfo.
+            yield return new object[] { typeof(DataClass).GetEvent(nameof(DataClass.Event)), new object[0], null };
+
+            // Null MemberInfo.
+            yield return new object[] { null, new object[0], null };
+            yield return new object[] { null, new object[] { new object() }, null };
+        }
+
+        [Theory]
+        [MemberData(nameof(Invoke_TestData))]
+        public void Invoke_Invoke_ReturnsExpected(MemberInfo member, object[] arguments, object expected)
+        {
+            var instanceDescriptor = new InstanceDescriptor(member, arguments);
+            Assert.Equal(expected, instanceDescriptor.Invoke());
         }
 
         [Fact]
         public void Invoke_PropertyInfoArgumentMismatch_ThrowsTargetParameterCountException()
         {
-            PropertyInfo pi = typeof(StaticProperty).GetProperty(nameof(StaticProperty.Property));
-
-            InstanceDescriptor id = new InstanceDescriptor(pi, new object[] { Url });
-            Assert.Equal(1, id.Arguments.Count);
-            object[] arguments = new object[id.Arguments.Count];
-            id.Arguments.CopyTo(arguments, 0);
-            Assert.Same(Url, arguments[0]);
-            Assert.True(id.IsComplete);
-            Assert.Same(pi, id.MemberInfo);
-
-            Assert.Throws<TargetParameterCountException>(() => id.Invoke());
+            PropertyInfo member = typeof(DataClass).GetProperty(nameof(DataClass.Property));
+            InstanceDescriptor instanceDescriptor = new InstanceDescriptor(member, new object[] { Url });
+            Assert.Throws<TargetParameterCountException>(() => instanceDescriptor.Invoke());
         }
 
-        [Fact]
-        public void Ctor_NonStaticPropertyInfo_ThrowsArgumentException()
+        private class DataClass
         {
-            PropertyInfo pi = typeof(InstanceProperty).GetProperty(nameof(InstanceProperty.Property));
-            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(pi, null));
-            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(pi, null, false));
-        }
+            static DataClass() { }
 
-        [Fact]
-        public void Ctor_WriteOnlyPropertyInfo_ThrowsArgumentException()
-        {
-            PropertyInfo pi = typeof(WriteOnlyProperty).GetProperty(nameof(WriteOnlyProperty.Name));
-            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(pi, null));
-        }
+            public static string Field = nameof(Field);
 
-        [Fact]
-        public void Ctor_MethodInfo_ICollection()
-        {
-            MethodInfo method = typeof(MethodClass).GetMethod(nameof(MethodClass.StaticMethod));
-            var arguments = new object[] { 1 };
+            public string NonStaticField = nameof(NonStaticField);
 
-            var instanceDescriptor = new InstanceDescriptor(method, arguments);
-            Assert.Same(method, instanceDescriptor.MemberInfo);
-            Assert.Equal(arguments, instanceDescriptor.Arguments);
-            Assert.NotSame(arguments, instanceDescriptor.Arguments);
-            Assert.True(instanceDescriptor.IsComplete);
+            public static string Property { get; set; } = nameof(Property);
 
-            Assert.Equal("1", instanceDescriptor.Invoke());
-        }
+            public string NonStaticProperty { get; set; }
 
-        [Fact]
-        public void Ctor_NonStaticMethod_ThrowsArgumentException()
-        {
-            MethodInfo method = typeof(MethodClass).GetMethod(nameof(MethodClass.Method));
-            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(method, new object[] { 1 }));
-        }
-
-        [Theory]
-        [InlineData(0)]
-        [InlineData(2)]
-        public void Ctor_IncorrectMethodArgumentCount_ThrowsArgumentException(int count)
-        {
-            MethodInfo method = typeof(MethodClass).GetMethod(nameof(MethodClass.StaticMethod));
-            AssertExtensions.Throws<ArgumentException>(null, () => new InstanceDescriptor(method, new object[count]));
-        }
-
-        [Fact]
-        public void Ctor_EventInfo_ICollection()
-        {
-            EventInfo eventInfo = typeof(EventClass).GetEvent(nameof(EventClass.Event));
-            var arguments = new object[] { 1 };
-
-            var instanceDescriptor = new InstanceDescriptor(eventInfo, arguments);
-            Assert.Same(eventInfo, instanceDescriptor.MemberInfo);
-            Assert.Equal(arguments, instanceDescriptor.Arguments);
-            Assert.NotSame(arguments, instanceDescriptor.Arguments);
-            Assert.True(instanceDescriptor.IsComplete);
-
-            Assert.Null(instanceDescriptor.Invoke());
-        }
-
-        [Fact]
-        public void Invoke_ArgumentInstanceDescriptor_InvokesArgument()
-        {
-            MethodInfo argumentMethod = typeof(MethodClass).GetMethod(nameof(MethodClass.IntMethod));
-            var argumentInstanceDescriptor = new InstanceDescriptor(argumentMethod, null);
-
-            MethodInfo method = typeof(MethodClass).GetMethod(nameof(MethodClass.StaticMethod));
-            var instanceDescriptor = new InstanceDescriptor(method, new object[] { argumentInstanceDescriptor });
-
-            Assert.Equal("1", instanceDescriptor.Invoke());
-        }
-
-        [Fact]
-        public void Invoke_NullMember_ReturnsNull()
-        {
-            var instanceDescriptor = new InstanceDescriptor(null, new object[0]);
-            Assert.Null(instanceDescriptor.Invoke());
-        }
-
-        private class EventClass
-        {
-            public event EventHandler Event { add { } remove { } }
-        }
-
-        private class StaticConstructor
-        {
-            static StaticConstructor() { }
-        }
-
-        private class MethodClass
-        {
-            public void Method(int i) { }
-
-            public static int IntMethod() => 1;
-            public static string StaticMethod(int i) => i.ToString();
-        }
-
-        private class WriteOnlyProperty
-        {
-            public static string Name
+            public static string WriteOnlyProperty
             {
                 set { }
             }
-        }
 
-        public class InstanceField
-        {
-            public string Name = "FieldValue";
-        }
+            public void NonStaticMethod(int i) { }
 
-        public class InstanceProperty
-        {
-            public string Property => "PropertyValue";
-        }
+            public static int IntReturningMethod() => 1;
 
-        public class StaticField
-        {
-            public static readonly string Field = "FieldValue";
-        }
+            public static string ParameterlessMethod() => nameof(ParameterlessMethod);
 
-        public class StaticProperty
-        {
-            public static string Property => "PropertyValue";
+            public static string IntMethod(int i) => i.ToString();
+
+            public event EventHandler Event { add { } remove { } }
         }
     }
 }

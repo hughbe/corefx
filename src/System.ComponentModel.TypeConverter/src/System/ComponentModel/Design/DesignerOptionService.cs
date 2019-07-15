@@ -40,15 +40,13 @@ namespace System.ComponentModel.Design
             {
                 throw new ArgumentNullException(nameof(parent));
             }
-
             if (name == null)
             {
                 throw new ArgumentNullException(nameof(name));
             }
-
             if (name.Length == 0)
             {
-                throw new ArgumentException(SR.Format(SR.InvalidArgumentValue, name.Length.ToString(), "0"), "name.Length");
+                throw new ArgumentException(SR.Format(SR.InvalidArgumentValue, name.Length, 0), nameof(name));
             }
 
             return new DesignerOptionCollection(this, parent, name, value);
@@ -64,7 +62,6 @@ namespace System.ComponentModel.Design
             {
                 throw new ArgumentNullException(nameof(pageName));
             }
-
             if (valueName == null)
             {
                 throw new ArgumentNullException(nameof(valueName));

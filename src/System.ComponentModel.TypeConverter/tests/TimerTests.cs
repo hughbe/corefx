@@ -11,17 +11,6 @@ namespace System.Timers.Tests
 {
     public class TimerTests
     {
-        [Theory]
-        [InlineData(0)]
-        [InlineData(-0.5D)]
-        [InlineData(-1)]
-        [InlineData(double.MinValue)]
-        [InlineData(double.MaxValue)]
-        public void NegativeTests(double interval)
-        {
-            AssertExtensions.Throws<ArgumentException>(null, () => new TestTimer(interval));
-        }
-
         [Fact]
         public void Ctor_PropertiesMatchExpectedDefaults()
         {
@@ -34,6 +23,17 @@ namespace System.Timers.Tests
                 Assert.Null(timer.SynchronizingObject);
                 Assert.Null(timer.Site);
             }
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-0.5D)]
+        [InlineData(-1)]
+        [InlineData(double.MinValue)]
+        [InlineData(double.MaxValue)]
+        public void Ctor_InvalidInterval_ThrowsArgumentOutOfRangeException(double interval)
+        {
+            AssertExtensions.Throws<ArgumentOutOfRangeException>("interval", () => new TestTimer(interval));
         }
 
         [Fact]

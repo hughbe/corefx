@@ -87,7 +87,7 @@ namespace System.ComponentModel.Design
             if (serviceInstance == null) throw new ArgumentNullException(nameof(serviceInstance));
             if (!(serviceInstance is ServiceCreatorCallback) && !serviceInstance.GetType().IsCOMObject && !serviceType.IsInstanceOfType(serviceInstance))
             {
-                throw new ArgumentException(SR.Format(SR.ErrorInvalidServiceInstance, serviceType.FullName));
+                throw new ArgumentException(SR.Format(SR.ErrorInvalidServiceInstance, serviceType.FullName), nameof(serviceInstance));
             }
 
             if (Services.ContainsKey(serviceType))

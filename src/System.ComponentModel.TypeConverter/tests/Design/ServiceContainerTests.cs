@@ -237,9 +237,9 @@ namespace System.ComponentModel.Design.Tests
         public void AddService_ServiceInstanceNotInstanceOfType_ThrowsArgumentException()
         {
             var container = new ServiceContainer();
-            Assert.Throws<ArgumentException>(null, () => container.AddService(typeof(int), new object()));
-            Assert.Throws<ArgumentException>(null, () => container.AddService(typeof(int), new object(), true));
-            Assert.Throws<ArgumentException>(null, () => container.AddService(typeof(int), new object(), false));
+            Assert.Throws<ArgumentException>("serviceInstance", () => container.AddService(typeof(int), new object()));
+            Assert.Throws<ArgumentException>("serviceInstance", () => container.AddService(typeof(int), new object(), true));
+            Assert.Throws<ArgumentException>("serviceInstance", () => container.AddService(typeof(int), new object(), false));
         }
 
         [Fact]

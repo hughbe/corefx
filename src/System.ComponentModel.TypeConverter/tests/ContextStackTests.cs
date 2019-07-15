@@ -106,24 +106,14 @@ namespace System.ComponentModel.Tests
             Assert.Null(stack[1]);
         }
 
-        [Fact] // Item (Int32)
-        public void Indexer1_Level_Negative()
+        [Theory]
+        [InlineData(-1)]
+        [InlineData(-5)]
+        public void Item_NegativeLevel_ThrowsArgumentOutOfRangeException(int level)
         {
             ContextStack stack = new ContextStack();
             stack.Push(new Foo());
-            ArgumentOutOfRangeException ex;
-
-            ex = Assert.Throws<ArgumentOutOfRangeException>(() => stack[-1]);
-            Assert.Equal(typeof(ArgumentOutOfRangeException), ex.GetType());
-            Assert.Null(ex.InnerException);
-            Assert.Equal(new ArgumentOutOfRangeException("level").Message, ex.Message);
-            Assert.Equal("level", ex.ParamName);
-
-            ex = Assert.Throws<ArgumentOutOfRangeException>(() => stack[-5]);
-            Assert.Equal(typeof(ArgumentOutOfRangeException), ex.GetType());
-            Assert.Null(ex.InnerException);
-            Assert.Equal(new ArgumentOutOfRangeException("level").Message, ex.Message);
-            Assert.Equal("level", ex.ParamName);
+            Assert.Throws<ArgumentOutOfRangeException>("level", () => stack[level]);
         }
 
         [Fact] // Item (Type)

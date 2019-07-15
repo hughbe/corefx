@@ -52,7 +52,7 @@ namespace System.Drawing
 
                 if (values.Length != 4)
                 {
-                    throw new ArgumentException(SR.Format(SR.TextParseFailedFormat, "text", text, "x, y, width, height"));
+                    throw new ArgumentException(SR.Format(SR.TextParseFailedFormat, "text", text, "x, y, width, height"), nameof(value));
                 }
 
                 return new Rectangle(values[0], values[1], values[2], values[3]);
@@ -123,7 +123,7 @@ namespace System.Drawing
             if (x == null || y == null || width == null || height == null ||
                 !(x is int) || !(y is int) || !(width is int) || !(height is int))
             {
-                throw new ArgumentException(SR.PropertyValueInvalidEntry);
+                throw new ArgumentException(SR.PropertyValueInvalidEntry, nameof(propertyValues));
             }
 
             return new Rectangle((int)x, (int)y, (int)width, (int)height);

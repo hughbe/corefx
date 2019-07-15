@@ -316,26 +316,12 @@ namespace System.ComponentModel.Tests
 
             // new component, same case
             TestComponent c2 = new TestComponent();
-            ArgumentException ex;
-
-            ex = AssertExtensions.Throws<ArgumentException>(null, () => container.Add(c2, "dup"));
-            Assert.Equal(typeof(ArgumentException), ex.GetType());
-            Assert.Null(ex.InnerException);
-            Assert.NotNull(ex.Message);
-            Assert.True(ex.Message.IndexOf("'dup'") != -1);
-            Assert.Null(ex.ParamName);
+            AssertExtensions.Throws<ArgumentException>("name", () => container.Add(c2, "dup"));
             Assert.Equal(1, container.Components.Count);
 
             // new component, different case
             TestComponent c3 = new TestComponent();
-            ex = AssertExtensions.Throws<ArgumentException>(null, () => container.Add(c3, "duP"));
-            // Duplicate component name 'duP'.  Component names must be
-            // unique and case-insensitive
-            Assert.Equal(typeof(ArgumentException), ex.GetType());
-            Assert.Null(ex.InnerException);
-            Assert.NotNull(ex.Message);
-            Assert.True(ex.Message.IndexOf("'duP'") != -1);
-            Assert.Null(ex.ParamName);
+            AssertExtensions.Throws<ArgumentException>("name", () => container.Add(c3, "duP"));
             Assert.Equal(1, container.Components.Count);
 
             // existing component, same case
@@ -350,14 +336,7 @@ namespace System.ComponentModel.Tests
             TestContainer container2 = new TestContainer();
             TestComponent c5 = new TestComponent();
             container2.Add(c5, "C5");
-            ex = AssertExtensions.Throws<ArgumentException>(null, () => container.Add(c5, "dup"));
-            // Duplicate component name 'dup'.  Component names must be
-            // unique and case-insensitive
-            Assert.Equal(typeof(ArgumentException), ex.GetType());
-            Assert.Null(ex.InnerException);
-            Assert.NotNull(ex.Message);
-            Assert.True(ex.Message.IndexOf("'dup'") != -1);
-            Assert.Null(ex.ParamName);
+            AssertExtensions.Throws<ArgumentException>("name", () => container.Add(c5, "dup"));
             Assert.Equal(2, container.Components.Count);
             Assert.Equal(1, container2.Components.Count);
             Assert.Same(c5, container2.Components[0]);
@@ -400,7 +379,7 @@ namespace System.ComponentModel.Tests
             container.Add(component1, "Name1");
             container.Add(component2, "Name2");
 
-            Assert.Throws<ArgumentException>(null, () => component1.Site.Name = "Name2");
+            Assert.Throws<ArgumentException>("name", () => component1.Site.Name = "Name2");
         }
 
         [Fact]
@@ -722,28 +701,13 @@ namespace System.ComponentModel.Tests
             TestComponent compB = new TestComponent();
             _container.Add(compB, "B");
 
-            ArgumentException ex;
-            ex = AssertExtensions.Throws<ArgumentException>(null, () => _container.InvokeValidateName(compB, "dup"));
-            // Duplicate component name 'duP'.  Component names must be
-            // unique and case-insensitive
-            Assert.Equal(typeof(ArgumentException), ex.GetType());
-            Assert.Null(ex.InnerException);
-            Assert.NotNull(ex.Message);
-            Assert.True(ex.Message.IndexOf("'dup'") != -1);
-            Assert.Null(ex.ParamName);
+            AssertExtensions.Throws<ArgumentException>("name", () => _container.InvokeValidateName(compB, "dup"));
             Assert.Equal(2, _container.Components.Count);
             _container.InvokeValidateName(compB, "whatever");
 
             // new component, different case
             TestComponent compC = new TestComponent();
-            ex = AssertExtensions.Throws<ArgumentException>(null, () => _container.InvokeValidateName(compC, "dup"));
-            // Duplicate component name 'duP'.  Component names must be
-            // unique and case-insensitive
-            Assert.Equal(typeof(ArgumentException), ex.GetType());
-            Assert.Null(ex.InnerException);
-            Assert.NotNull(ex.Message);
-            Assert.True(ex.Message.IndexOf("'dup'") != -1);
-            Assert.Null(ex.ParamName);
+            AssertExtensions.Throws<ArgumentException>("name", () => _container.InvokeValidateName(compC, "dup"));
             Assert.Equal(2, _container.Components.Count);
             _container.InvokeValidateName(compC, "whatever");
 
@@ -751,14 +715,7 @@ namespace System.ComponentModel.Tests
             TestContainer container2 = new TestContainer();
             TestComponent compD = new TestComponent();
             container2.Add(compD, "B");
-            ex = AssertExtensions.Throws<ArgumentException>(null, () => _container.InvokeValidateName(compD, "dup"));
-            // Duplicate component name 'duP'.  Component names must be
-            // unique and case-insensitive
-            Assert.Equal(typeof(ArgumentException), ex.GetType());
-            Assert.Null(ex.InnerException);
-            Assert.NotNull(ex.Message);
-            Assert.True(ex.Message.IndexOf("'dup'") != -1);
-            Assert.Null(ex.ParamName);
+            AssertExtensions.Throws<ArgumentException>("name", () => _container.InvokeValidateName(compD, "dup"));
             Assert.Equal(2, _container.Components.Count);
             _container.InvokeValidateName(compD, "whatever");
             Assert.Equal(1, container2.Components.Count);

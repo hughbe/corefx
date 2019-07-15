@@ -52,7 +52,7 @@ namespace System.Drawing
 
                 if (values.Length != 2)
                 {
-                    throw new ArgumentException(SR.Format(SR.TextParseFailedFormat, text, "Width,Height"));
+                    throw new ArgumentException(SR.Format(SR.TextParseFailedFormat, text, "Width,Height"), nameof(value));
                 }
 
                 return new Size(values[0], values[1]);
@@ -115,7 +115,7 @@ namespace System.Drawing
 
             if (width == null || height == null || !(width is int) || !(height is int))
             {
-                throw new ArgumentException(SR.PropertyValueInvalidEntry);
+                throw new ArgumentException(SR.PropertyValueInvalidEntry, nameof(propertyValues));
             }
 
             return new Size((int)width, (int)height);

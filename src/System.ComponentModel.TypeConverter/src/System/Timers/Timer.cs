@@ -47,13 +47,13 @@ namespace System.Timers
         {
             if (interval <= 0)
             {
-                throw new ArgumentException(SR.Format(SR.InvalidParameter, nameof(interval), interval));
+                throw new ArgumentOutOfRangeException(nameof(interval), interval, SR.Format(SR.InvalidParameter, nameof(interval), interval));
             }
 
             double roundedInterval = Math.Ceiling(interval);
             if (roundedInterval > int.MaxValue || roundedInterval <= 0)
             {
-                throw new ArgumentException(SR.Format(SR.InvalidParameter, nameof(interval), interval));
+                throw new ArgumentOutOfRangeException(nameof(interval), interval, SR.Format(SR.InvalidParameter, nameof(interval), interval));
             }
 
             _interval = (int)roundedInterval;
@@ -157,7 +157,7 @@ namespace System.Timers
             {
                 if (value <= 0)
                 {
-                    throw new ArgumentException(SR.Format(SR.TimerInvalidInterval, value, 0));
+                    throw new ArgumentOutOfRangeException(nameof(value), value, SR.Format(SR.TimerInvalidInterval, value, 0));
                 }
 
                 _interval = value;

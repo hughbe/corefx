@@ -44,7 +44,7 @@ namespace System.ComponentModel.Design.Serialization
             {
                 if (!fi.IsStatic)
                 {
-                    throw new ArgumentException(SR.InstanceDescriptorMustBeStatic);
+                    throw new ArgumentException(SR.InstanceDescriptorMustBeStatic, nameof(member));
                 }
                 if (Arguments.Count != 0)
                 {
@@ -55,7 +55,7 @@ namespace System.ComponentModel.Design.Serialization
             {
                 if (ci.IsStatic)
                 {
-                    throw new ArgumentException(SR.InstanceDescriptorCannotBeStatic);
+                    throw new ArgumentException(SR.InstanceDescriptorCannotBeStatic, nameof(member));
                 }
                 if (Arguments.Count != ci.GetParameters().Length)
                 {
@@ -66,7 +66,7 @@ namespace System.ComponentModel.Design.Serialization
             {
                 if (!mi.IsStatic)
                 {
-                    throw new ArgumentException(SR.InstanceDescriptorMustBeStatic);
+                    throw new ArgumentException(SR.InstanceDescriptorMustBeStatic, nameof(member));
                 }
                 if (Arguments.Count != mi.GetParameters().Length)
                 {
@@ -77,12 +77,12 @@ namespace System.ComponentModel.Design.Serialization
             {
                 if (!pi.CanRead)
                 {
-                    throw new ArgumentException(SR.InstanceDescriptorMustBeReadable);
+                    throw new ArgumentException(SR.InstanceDescriptorMustBeReadable, nameof(member));
                 }
                 MethodInfo getMethod = pi.GetGetMethod();
                 if (getMethod != null && !getMethod.IsStatic)
                 {
-                    throw new ArgumentException(SR.InstanceDescriptorMustBeStatic);
+                    throw new ArgumentException(SR.InstanceDescriptorMustBeStatic, nameof(member));
                 }
             }
         }

@@ -231,7 +231,7 @@ namespace System.ComponentModel
                         InheritanceAttribute inheritanceAttribute = (InheritanceAttribute)TypeDescriptor.GetAttributes(s.Component)[typeof(InheritanceAttribute)];
                         if (inheritanceAttribute.InheritanceLevel != InheritanceLevel.InheritedReadOnly)
                         {
-                            throw new ArgumentException(SR.Format(SR.DuplicateComponentName, name));
+                            throw new ArgumentException(SR.Format(SR.DuplicateComponentName, name), nameof(name));
                         }
                     }
                 }
