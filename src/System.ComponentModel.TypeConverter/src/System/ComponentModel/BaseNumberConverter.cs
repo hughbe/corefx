@@ -11,32 +11,34 @@ namespace System.ComponentModel
     /// </summary>
     public abstract class BaseNumberConverter : TypeConverter
     {
-        internal BaseNumberConverter() { }
+        internal BaseNumberConverter()
+        {
+        }
 
         /// <summary>
         /// Determines whether this editor will attempt to convert hex (0x or #) strings
         /// </summary>
-        internal virtual bool AllowHex => true;
+        private protected virtual bool AllowHex => true;
 
         /// <summary>
         /// The Type this converter is targeting (e.g. Int16, UInt32, etc.)
         /// </summary>
-        internal abstract Type TargetType { get; }
+        private protected abstract Type TargetType { get; }
 
         /// <summary>
         /// Convert the given value to a string using the given radix
         /// </summary>
-        internal abstract object FromString(string value, int radix);
+        private protected abstract object FromString(string value, int radix);
 
         /// <summary>
         /// Convert the given value to a string using the given formatInfo
         /// </summary>
-        internal abstract object FromString(string value, NumberFormatInfo formatInfo);
+        private protected abstract object FromString(string value, NumberFormatInfo formatInfo);
 
         /// <summary>
         /// Convert the given value from a string using the given formatInfo
         /// </summary>
-        internal abstract string ToString(object value, NumberFormatInfo formatInfo);
+        private protected abstract string ToString(object value, NumberFormatInfo formatInfo);
 
         /// <summary>
         /// Gets a value indicating whether this converter can convert an object in the

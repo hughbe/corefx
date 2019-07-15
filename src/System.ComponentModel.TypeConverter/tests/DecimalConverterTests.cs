@@ -17,6 +17,7 @@ namespace System.ComponentModel.Tests
             yield return ConvertTest.Valid((decimal)-1, "-1");
             yield return ConvertTest.Valid(1.1m, 1.1m.ToString());
             yield return ConvertTest.Valid(3.3m, (float)3.3);
+            yield return ConvertTest.Valid(1, "1");
 
             yield return ConvertTest.Valid((decimal)-1, "?1", new CustomPositiveSymbolCulture());
 

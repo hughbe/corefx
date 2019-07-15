@@ -17,6 +17,7 @@ namespace System.ComponentModel.Tests
             yield return ConvertTest.Valid((sbyte)-1, "-1");
             yield return ConvertTest.Valid((sbyte)2, (sbyte)2, CultureInfo.InvariantCulture);
             yield return ConvertTest.Valid((sbyte)3, (float)3.0);
+            yield return ConvertTest.Valid(1, "1");
 
             yield return ConvertTest.Valid((sbyte)-1, "?1", new CustomPositiveSymbolCulture());
 

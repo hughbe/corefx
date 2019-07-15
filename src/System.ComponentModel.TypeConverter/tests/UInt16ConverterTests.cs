@@ -17,6 +17,7 @@ namespace System.ComponentModel.Tests
             yield return ConvertTest.Valid((ushort)1, "1");
             yield return ConvertTest.Valid((ushort)2, (ushort)2, CultureInfo.InvariantCulture);
             yield return ConvertTest.Valid((ushort)3, (float)3.0);
+            yield return ConvertTest.Valid(1, "1");
 
             yield return ConvertTest.CantConvertTo((ushort)3, typeof(InstanceDescriptor));
             yield return ConvertTest.CantConvertTo((ushort)3, typeof(object));

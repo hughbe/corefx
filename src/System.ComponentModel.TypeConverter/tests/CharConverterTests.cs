@@ -20,6 +20,7 @@ namespace System.ComponentModel.Tests
             yield return ConvertTest.Valid('a', "a");
             yield return ConvertTest.Valid('\u20AC', "\u20AC", CultureInfo.InvariantCulture);
             yield return ConvertTest.Valid('\0', string.Empty);
+            yield return ConvertTest.Valid(1, "1");
 
             yield return ConvertTest.CantConvertTo('a', typeof(char));
             yield return ConvertTest.CantConvertTo('a', typeof(InstanceDescriptor));
@@ -35,6 +36,7 @@ namespace System.ComponentModel.Tests
             yield return ConvertTest.Throws<FormatException>("aa");
 
             yield return ConvertTest.CantConvertFrom(1);
+            yield return ConvertTest.CantConvertFrom(new object());
             yield return ConvertTest.CantConvertFrom(null);
         }
     }
