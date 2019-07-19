@@ -96,7 +96,7 @@
     <Compile Include="System\CodeDom\CodeAttributeDeclarationTests.cs" />
     <Compile Include="System\CodeDom\CodeAttributeArgumentTests.cs" />
     <Compile Include="System\CodeDom\Compiler\VBCodeGenerationTests.cs" />
-    <Compile Include="System\CodeDom\Compiler\CSharpCodeGenerationTests.cs" />
+    <Compile Include="System\CodeDom\Compiler\CSharpCodeGeneratorTests.cs" />
     <Compile Include="$(CommonTestPath)\System\Collections\IList.NonGeneric.Tests.cs">
       <Link>Common\System\Collections\IList.NonGeneric.Tests.cs</Link>
     </Compile>
